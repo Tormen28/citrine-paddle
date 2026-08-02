@@ -1,324 +1,184 @@
-# Analizador de Precios Binance P2P
+# VESP2P — Dashboard USDT/VES P2P
 
-Una herramienta avanzada para analizar precios en tiempo real y proyectar tendencias futuras en el mercado Binance P2P (USDT/BOB). Diseñada para traders e inversores que buscan optimizar sus operaciones de compra y venta de criptomonedas.
+Dashboard en tiempo real para el mercado P2P **USDT/VES** (Bolívares), que reúne el precio de 7+ exchanges (Binance P2P, Bybit, OKX, Bitget, MEXC, BingX, Saldo), la **tasa oficial del BCV** y la **brecha entre el dólar oficial y el paralelo**. Con tendencias, velas OHLC, análisis técnico y proyecciones — en español, para cualquier usuario.
 
-## 🚀 Características
+## ✨ Características
 
-- **Análisis de Precios en Tiempo Real:** Obtén el precio mínimo, máximo y el spread actual para operaciones de compra y venta de USDT en BOB.
-- **Proyecciones de Precios Inteligentes:** Un modelo predictivo que analiza tendencias y proyecta movimientos futuros de precios, sugiriendo el mejor momento para comprar o vender.
-- **Filtrado de Anunciantes por Experiencia:** Prioriza la seguridad y eficiencia al mostrar solo anunciantes con un historial comprobado (más de 500 órdenes completadas). Si no hay suficientes, muestra todos los disponibles.
-- **Tabla Detallada de Anunciantes:** Explora una lista completa de anunciantes con su reputación, disponibilidad, límites y métodos de pago. Incluye funcionalidad de búsqueda y ordenamiento.
-- **Interfaz de Usuario Intuitiva:** Una experiencia de usuario moderna y responsiva, construida con componentes de Shadcn/ui.
-- **Proxy API Robusto:** Un Route Handler en Next.js que actúa como un proxy para la API de Binance P2P, manejando la paginación y simulando solicitudes de navegador para una recolección de datos fiable.
+- **Resumen de un vistazo:** Precio del dólar paralelo en grande, tendencia de las últimas 24 h con sparkline, dónde comprar/vender USDT al mejor precio y la tasa oficial BCV con su brecha.
+- **Exchanges en vivo:** Ranking para comprar y vender USDT con precio, spread y **brecha vs BCV** por exchange.
+- **Análisis completo:**
+  - Gráfico de tendencia del historial con selector de rango (1 semana / 1 mes / 3 meses / todo).
+  - Gráfico de velas OHLC (timeframes de 5 min a 24 h).
+  - Panel de algoritmo: RSI, medias móviles (MA5/MA20), volatilidad, señal de tendencia y fuerza.
+  - Tabla **BCV vs P2P** con la brecha oficial histórica.
+  - Proyección de precios con recomendaciones de compra/venta.
+- **Alertas configurables** de spread y precio.
+- **Datos persistentes:** El histórico se guarda cada 5 min en Supabase, con 8,000+ snapshots acumulados y agregación de velas por SQL en Postgres.
 
-## 🛠️ Tecnologías Utilizadas
+## 🛠️ Stack
 
-- **Next.js 14 (App Router):** Framework de React para aplicaciones web full-stack.
-- **React:** Biblioteca de JavaScript para construir interfaces de usuario.
-- **Tailwind CSS:** Framework CSS para un desarrollo rápido y estilizado.
-- **Shadcn/ui:** Componentes de UI reutilizables y accesibles, construidos con Radix UI y Tailwind CSS.
-- **Node.js:** Entorno de ejecución para el backend (Route Handler).
-- **`date-fns`:** Librería para manipulación y formateo de fechas.
-- **`lucide-react`:** Colección de iconos personalizables.
-- **`clsx` y `tailwind-merge`:** Utilidades para la gestión de clases CSS.
+- **Next.js 14 (App Router)** + React + TypeScript
+- **Tailwind CSS** + **Shadcn/ui**
+- **Supabase** (Postgres + Edge Functions + pg_cron)
+- **Cloudflare Workers** (OpenNext) para producción
+- **`lucide-react`**, **`date-fns`**
 
-## ⚙️ Instalación y Configuración
+## 📊 Arquitectura de datos
 
-Sigue estos pasos para configurar y ejecutar el proyecto localmente.
-
-### Prerrequisitos
-
-Asegúrate de tener instalado:
-
-- Node.js (versión 18 o superior)
-- npm o Yarn
-
-### Pasos
-
-1. **Clona el repositorio:**
-   ```bash
-   git clone https://github.com/kirusiya/Analizador-de-Precios-Binance-P2P.git
-   cd binance-p2p-analyzer
-   ```
-
-2. **Instala las dependencias:**
-   ```bash
-   npm install
-   # o
-   yarn install
-   ```
-
-3. **Ejecuta el servidor de desarrollo:**
-   ```bash
-   npm run dev
-   # o
-   yarn dev
-   ```
-   La aplicación estará disponible en `http://localhost:3000`.
-
-4. **Construye para producción (opcional):**
-   ```bash
-   npm run build
-   # o
-   yarn build
-   ```
-   Luego, puedes iniciar la aplicación en modo de producción:
-
-   ```bash
-   npm run start
-   # o
-   yarn start
-   ```
-
-## 🚀 Uso
-
-1. **Accede a la Aplicación:** Abre tu navegador y ve a `http://localhost:3000`.
-2. **Actualizar Datos:** Haz clic en el botón "Actualizar Todos los Datos" para obtener la información más reciente de Binance P2P.
-3. **Ver Estadísticas:** Las tarjetas de "Vender USDT" y "Comprar USDT" mostrarán los precios mínimos, máximos y el spread.
-4. **Explorar Anunciantes:** La tabla de anunciantes te permite buscar por nombre, precio, métodos de pago, etc., y ver detalles de cada anunciante.
-5. **Proyecciones de Precios:** La sección de "Proyección de Precios" te dará una recomendación basada en la tendencia actual del mercado y una tabla con proyecciones diarias. Puedes filtrar el rango de fechas y el tipo de precio base para la proyección.
-
-## 🌐 API Endpoint
-
-La aplicación utiliza un Route Handler en Next.js como proxy para la API de Binance P2P.
-
-- **Endpoint:** `/api/binance-p2p`
-- **Método:** `GET`
-- **Parámetros de Query:**
-  - `tradeType`: `SELL` o `BUY` (por defecto `SELL`).
-  - `t`: Timestamp para evitar caché (añadido automáticamente por el frontend).
-  - `retry`: Contador de reintentos (añadido automáticamente por el frontend).
-
-Este endpoint realiza una solicitud `POST` a `https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search` con los `headers` y `payload` necesarios para obtener los anuncios. Filtra y procesa los datos antes de enviarlos al frontend.
-
-### Ejemplo de Respuesta
-
-```json
-{
-  "timestamp": "2024-01-20T15:30:00.000Z",
-  "tradeType": "SELL",
-  "priceStats": {
-    "min": "7.25",
-    "max": "7.35",
-    "spread": "0.10"
-  },
-  "sampleSize": 15,
-  "advertisements": [
-    {
-      "advertiser": {
-        "nickName": "Trader123",
-        "userNo": "abc123",
-        "monthOrderCount": 850,
-        "monthFinishRate": 0.98,
-        "positiveRate": 0.99,
-        "userType": "merchant",
-        "isVerified": true,
-        "proMerchant": true
-      },
-      "price": 7.30,
-      "available": 1500.00,
-      "limits": {
-        "min": 100.00,
-        "max": 10000.00,
-        "minInUSDT": 13.70,
-        "maxInUSDT": 1369.86
-      },
-      "payMethods": ["Banco Union", "BCP", "Mercantil Santa Cruz"],
-      "orderCount": 850,
-      "completionRate": 0.98,
-      "averageTime": 15
-    }
-  ],
-  "filterInfo": {
-    "minOrders": 500,
-    "totalCount": 15,
-    "verifiedCount": 12,
-    "usingAllAds": false,
-    "totalAdsFound": 45
-  }
-}
+```
+CriptoYa API ──► Edge Function "rates" (Supabase) ──► /api/rates ──► Dashboard en vivo
+Binance P2P ──► Edge Function "scraper" (cada 5 min) ──► tabla marketsnapshot (Supabase) ──► /api/history, /api/candles
+BCV (bcv.today) ──► Edge Function "bcv" (diario 01:00) ──► tabla bcv_rates ──► /api/bcv
 ```
 
-## 📊 Funcionalidades Detalladas
+### Tablas (Supabase)
 
-### Análisis de Precios en Tiempo Real
-- Muestra el precio mínimo, máximo y spread actual
-- Actualización automática de datos
-- Indicadores visuales de tendencias (colores verdes para venta, azules para compra)
-- Timestamp de la última actualización
+| Tabla | Propósito |
+|---|---|
+| `marketsnapshot` | Snapshots de precio cada 5 min (buyprice, sellprice, spread, volúmenes, IQR) |
+| `bcv_rates` | Tasa oficial diaria del BCV |
 
-### Proyecciones de Precios
-- Algoritmo predictivo basado en análisis de distribución de precios
-- Identificación de tendencias (al alza, a la baja, estable)
-- Recomendaciones específicas según el tipo de operación
-- Tabla de proyección de precios por fecha
-- Filtros configurables por rango de fechas y tipo de precio base
+### Funciones RPC
 
-### Filtrado Inteligente de Anunciantes
-- Priorización de anunciantes con más de 500 órdenes completadas
-- Fallback automático a todos los anunciantes si no hay suficientes experimentados
-- Indicadores visuales de experiencia y verificación
-- Información detallada de reputación y estadísticas
+| Función | Uso |
+|---|---|
+| `get_candles(p_timeframe, p_limit)` | Velas OHLC agregadas en Postgres |
+| `get_bcv_analysis(p_days)` | Tasa BCV diaria vs promedio P2P |
+| `upsert_snapshot` | Inserción/actualización de snapshots |
 
-### Tabla Interactiva de Anunciantes
-- Búsqueda en tiempo real por múltiples criterios
-- Ordenamiento automático por mejor precio según tipo de operación
-- Información completa: precio, disponibilidad, límites, métodos de pago
-- Indicadores de confiabilidad y experiencia
+Las migraciones SQL están versionadas en [`supabase/migrations/`](supabase/migrations/).
 
-## 🤝 Contribuciones
+### Edge Functions
 
-¡Las contribuciones son bienvenidas! Si deseas mejorar este proyecto, por favor:
+| Función | Frecuencia | Origen |
+|---|---|---|
+| `scraper` | pg_cron cada 5 min | Binance P2P → `marketsnapshot` |
+| `rates` | on-demand | Proxy CriptoYa (evita bloqueo IP de Cloudflare) |
+| `bcv` | pg_cron diario 01:00 | bcv.today → `bcv_rates` |
 
-1. Haz un fork del repositorio.
-2. Crea una nueva rama (`git checkout -b feature/nueva-funcionalidad`).
-3. Realiza tus cambios y haz commit (`git commit -m 'feat: Añade nueva funcionalidad'`).
-4. Haz push a tu rama (`git push origin feature/nueva-funcionalidad`).
-5. Abre un Pull Request.
+## 🚀 Instalación y configuración
 
-### Guías para Contribuir
+### Requisitos
 
-- Sigue las convenciones de código existentes
-- Añade tests para nuevas funcionalidades
-- Actualiza la documentación según sea necesario
-- Asegúrate de que el código pase las pruebas de linting
+- Node.js 18+
+- npm
+- Un proyecto en [Supabase](https://supabase.com)
+- Cuenta de [Cloudflare Workers](https://workers.cloudflare.com) (para deploy)
 
-## 🐛 Reporte de Bugs
+### 1. Variables de entorno
 
-Si encuentras un bug, por favor abre un issue con:
+Crea un archivo `.env.local` en la raíz:
 
-- Descripción detallada del problema
-- Pasos para reproducir el bug
-- Comportamiento esperado vs. comportamiento actual
-- Screenshots si es aplicable
-- Información del entorno (navegador, versión de Node.js, etc.)
-
-## 📝 Roadmap
-
-### Funcionalidades Planificadas
-
-- [ ] Soporte para múltiples pares de criptomonedas (BTC/BOB, ETH/BOB)
-- [ ] Notificaciones de precios en tiempo real
-- [ ] Gráficos interactivos de tendencias de precios
-- [ ] API pública para desarrolladores
-- [ ] Aplicación móvil
-- [ ] Integración con webhooks
-- [ ] Sistema de alertas personalizables
-- [ ] Análisis histórico de precios
-
-### Mejoras Técnicas
-
-- [ ] Optimización de rendimiento del API
-- [ ] Implementación de caché Redis
-- [ ] Pruebas automatizadas (unit tests, integration tests)
-- [ ] CI/CD con GitHub Actions
-- [ ] Monitoreo y logging avanzado
-- [ ] Dockerización del proyecto
-
-## 📊 Métricas y Estadísticas
-
-El proyecto incluye las siguientes métricas:
-
-- **Tiempo de respuesta promedio:** <500ms
-- **Precisión de proyecciones:** Basado en análisis de distribución estadística
-- **Cobertura de anunciantes:** 95\%+ de anunciantes activos
-- **Disponibilidad del servicio:** 99.9\% uptime objetivo
-
-## 🔒 Consideraciones de Seguridad
-
-- **Proxy API:** Evita la exposición directa de claves API
-- **Rate Limiting:** Implementación de límites de solicitudes
-- **Validación de datos:** Sanitización de todas las entradas
-- **HTTPS:** Comunicación segura en producción
-- **Headers de seguridad:** Configuración de headers apropiados
-
-## 🌍 Localización
-
-Actualmente soporta:
-- **Español (es-ES):** Idioma principal
-- **Moneda:** BOB (Boliviano Boliviano)
-- **Formato de fechas:** DD/MM/YYYY
-
-## 📞 Soporte
-
-Si necesitas ayuda o tienes preguntas:
-
-- Abre un issue en GitHub
-- Revisa la documentación existente
-- Consulta las preguntas frecuentes (FAQ)
-
-## 🙏 Agradecimientos
-
-- **Binance:** Por proporcionar la API P2P
-- **Vercel:** Por la plataforma de deployment
-- **Shadcn/ui:** Por los componentes de UI
-- **Comunidad Open Source:** Por las librerías utilizadas
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` para más detalles.
-
----
-
-## 🔣 Developer   
-
-- 👨‍💻 **Ing. Edward Avalos** - *Full Stack Developer y Desarrollador Principal* - [GitHub](https://github.com/kirusiya/) | [LinkedIn](https://www.linkedin.com/in/edward-avalos-severiche/)
-- 📧 **Email**: edward@ajamba.org
-- 📱 **WhatsApp Business**: (+591) 61781119 | [Whatsapp](https://wa.me/59161781119)
-
----
-
-
----
-
-**¿Te gusta este proyecto?** ⭐ Dale una estrella en GitHub y compártelo con otros developers.
-
-**Desarrollado con ❤️ para la comunidad crypto de Bolivia**
-
-
----
-
-## 🗄️ Setup Supabase
-
-1. Crear proyecto en [supabase.com](https://supabase.com).
-2. Ir a **Settings → Database → Connection string**.
-3. Copiar el **Transaction pooler** URL (puerto `6543`).
-4. Formato esperado:
-   ```
-   postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
-   ```
-5. Setear `DATABASE_URL` en el archivo `.env`.
-6. Generar un token seguro para el cron:
-   ```bash
-   openssl rand -hex 32
-   ```
-7. Setearlo como `CRON_SECRET` en `.env`.
-
-### Primera migración
-
-Con `DATABASE_URL` apuntando a Supabase:
 ```bash
-npx prisma migrate deploy
-npx prisma generate
+# Supabase REST endpoint (Settings → API)
+SUPABASE_URL="https://TU_PROJECT_REF.supabase.co"
+SUPABASE_SECRET_KEY="sb_secret_..."
 ```
 
-## ▲ Deploy en Vercel
+> `.env.local` está en `.gitignore` y no se sube al repositorio.
 
-1. **Importar el repo** en [vercel.com](https://vercel.com).
-2. **Setear variables de entorno** en Project Settings → Environment Variables:
-   - `DATABASE_URL` (la misma de Supabase)
-   - `CRON_SECRET` (el mismo del `.env`)
-3. **Deploy.** Vercel detecta `vercel.json` y configura automáticamente un Cron Job que llama `GET /api/cron` cada 5 minutos (`*/5 * * * *`).
-4. **Verificar** que el cron quedó agendado: Vercel Dashboard → Project → Cron Jobs.
+### 2. Base de datos
 
-### Backfill local
+Aplica las migraciones:
 
-Para guardar snapshots al instante en desarrollo local:
+```bash
+npx supabase db push
+```
+
+(o crea las tablas/funciones manualmente desde los archivos en `supabase/migrations/`).
+
+### 3. Edge Functions
+
+Desplegar las funciones de Supabase:
+
+```bash
+supabase functions deploy scraper --no-verify-jwt
+supabase functions deploy rates --no-verify-jwt
+supabase functions deploy bcv --no-verify-jwt
+```
+
+Configura los secrets de las funciones:
+
+```bash
+supabase secrets set SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=...
+```
+
+Programa los crons en Supabase (SQL Editor):
+
+```sql
+-- Scraper cada 5 min
+select cron.schedule('scraper', '*/5 * * * *', $$ select net.http_post(
+  url := 'https://TU_PROJECT_REF.supabase.co/functions/v1/scraper',
+  headers := '{"Authorization": "Bearer TU_SECRET", "Content-Type": "application/json"}'::jsonb
+) $$);
+
+-- BCV diario 01:00
+select cron.schedule('bcv-daily', '0 1 * * *', $$ select net.http_post(
+  url := 'https://TU_PROJECT_REF.supabase.co/functions/v1/bcv',
+  headers := '{"Authorization": "Bearer TU_SECRET", "Content-Type": "application/json"}'::jsonb,
+  body := '{}'::jsonb
+) $$);
+```
+
+> Usa la **service role key** como `TU_SECRET` para que las funciones escriban en la base.
+
+### 4. Correr en local
+
 ```bash
 npm install
-npm run scraper
+npm run dev
 ```
 
-### Plan Hobby de Vercel
+Disponible en `http://localhost:3000`.
 
-Verifica el límite de cron jobs antes de deploy. Si `*/5 * * * *` no está disponible, alternativa: usar [cron-job.org](https://cron-job.org) externo configurado para pegarle a `https://<tu-app>.vercel.app/api/cron` cada 5 minutos con header `Authorization: Bearer ${CRON_SECRET}`.
+## 📦 Deploy en Cloudflare Workers
+
+```bash
+npx wrangler login
+npm run deploy
+```
+
+Esto ejecuta `opennextjs-cloudflare build && opennextjs-cloudflare deploy` y publica el worker `vesp2p`.
+
+Variables del worker (configuradas en `wrangler.jsonc` o por Dashboard):
+
+```bash
+npx wrangler secret put SUPABASE_URL
+npx wrangler secret put SUPABASE_SECRET_KEY
+```
+
+## 🔌 API Endpoints
+
+| Endpoint | Descripción |
+|---|---|
+| `GET /api/rates` | Precios en vivo de todos los exchanges, mejor compra/venta, spread global y promedio |
+| `GET /api/history?limit=N&downsample=M` | Historial de precios (keyset pagination, downsampling server-side) |
+| `GET /api/candles?timeframe=1h&limit=N` | Velas OHLC (agregadas por SQL en Postgres) |
+| `GET /api/bcv` | Tasa oficial BCV + brecha vs P2P |
+| `GET /api/bcv?history=true&days=90` | Historial BCV vs P2P diario |
+| `GET /api/cron` | (legacy) Trigger manual del scraper |
+
+## 🧪 Scripts
+
+```bash
+npm run dev       # desarrollo
+npm run build     # build Next.js
+npm run start     # servidor producción local
+npm run deploy    # build OpenNext + deploy a Cloudflare
+npm run scraper   # scraper local (backfill de snapshots)
+npm run lint      # ESLint
+```
+
+## ⚙️ Configuración de Supabase
+
+1. Crea un proyecto en [supabase.com](https://supabase.com).
+2. Copia la URL y la service role key de **Settings → API**.
+3. Aplica las migraciones (`supabase/migrations/`).
+4. Despliega las 3 edge functions y configura los crons.
+5. Pon `SUPABASE_URL` y `SUPABASE_SECRET_KEY` en `.env.local` y en el worker.
+
+---
+
+**¿Te gusta este proyecto?** Dale una estrella en GitHub.
+
+**Desarrollado para la comunidad P2P de Venezuela** 🇻🇪
