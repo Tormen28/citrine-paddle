@@ -96,6 +96,7 @@ export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProp
           const ma20 = calculateMA(closes, 20)
           let scenario = "Lateral"
           if (rsi > 70 && ma5 > ma20) scenario = "Posible correccion bajista (Sobrecompra)"
+          else if (rsi > 70 && ma5 < ma20) scenario = "Sobrecompra sin impulso (Agotamiento)"
           else if (rsi < 30 && ma5 < ma20) scenario = "Posible rebote alcista (Sobreventa)"
           else if (ma5 > ma20) scenario = "Tendencia Alcista"
           else if (ma5 < ma20) scenario = "Tendencia Bajista"
@@ -205,7 +206,11 @@ export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProp
   let overallSignal = "Neutral"
   let signalColor = "text-yellow-600 dark:text-yellow-400"
   let signalIcon = <Minus className="h-4 w-4" />
-  if (analysis.rsi > 70) {
+  if (analysis.rsi > 70 && analysis.ma5 < analysis.ma20) {
+    overallSignal = "Agotamiento"
+    signalColor = "text-amber-600 dark:text-amber-400"
+    signalIcon = <AlertTriangle className="h-4 w-4" />
+  } else if (analysis.rsi > 70) {
     overallSignal = "Sobrecompra"
     signalColor = "text-red-600 dark:text-red-400"
     signalIcon = <AlertTriangle className="h-4 w-4" />
