@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { useMarketSummary, type MarketSummary } from "@/hooks/use-market-summary"
 import { DashboardHeader } from "@/components/ui/dashboard-header"
 import { ExchangeCard } from "@/components/ui/exchange-card"
 import { CandleChart } from "@/components/ui/candle-chart"
@@ -42,27 +43,33 @@ export default function Home() {
     metrics,
   } = useRates()
 
+  const summary = useMarketSummary(spark, data?.avgPrice || 0)
+
   const renderSection = () => {
     switch (currentSection) {
       case "overview":
-        return <OverviewSection data={data} spark={spark} isLoading={isLoading} error={error} />
+        return <OverviewSection data={data} spark={spark} avgPrice={data?.avgPrice || 0} summary={summary} isLoading={isLoading} error={error} />
       case "exchanges":
         return (
-          <ExchangeCard
-            rates={data?.rates || []}
-            bestBid={data?.bestBid || null}
-            bestAsk={data?.bestAsk || null}
-            globalSpread={data?.globalSpread || 0}
-            avgPrice={data?.avgPrice || 0}
-            isLoading={isLoading}
-            error={error}
-            lastUpdated={lastUpdated}
-            onRefresh={refresh}
-          />
+          <div className="space-y-4">
+            <MarketSummaryCard summary={summary} avgPrice={data?.avgPrice || 0} />
+            <ExchangeCard
+              rates={data?.rates || []}
+              bestBid={data?.bestBid || null}
+              bestAsk={data?.bestAsk || null}
+              globalSpread={data?.globalSpread || 0}
+              avgPrice={data?.avgPrice || 0}
+              isLoading={isLoading}
+              error={error}
+              lastUpdated={lastUpdated}
+              onRefresh={refresh}
+            />
+          </div>
         )
       case "analisis":
         return (
           <div className="space-y-6">
+            <MarketSummaryCard summary={summary} avgPrice={data?.avgPrice || 0} />
             <DataRangeSelector range={range} onRangeChange={setRange} />
             <TrendChart range={range} />
             <CandleChart range={range} />
@@ -153,52 +160,15 @@ function DataRangeSelector({
 interface OverviewSectionProps {
   data: ReturnType<typeof useRates>["data"]
   spark: number[]
+  avgPrice: number
+  summary: MarketSummary
   isLoading: boolean
   error: string | null
 }
 
-function OverviewSection({ data, spark, isLoading, error }: OverviewSectionProps) {
+function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: OverviewSectionProps) {
   const { latest: bcvLatest, isLoading: bcvLoading } = useBcv()
-
-  const sparkStats = useMemo((): { changePct: number; trend: "up" | "down" | "stable" } | null => {
-    if (spark.length < 2) return null
-    const first = spark[0]
-    const last = spark[spark.length - 1]
-    const changePct = first > 0 ? ((last - first) / first) * 100 : 0
-    const trend = changePct > 0.1 ? "up" : changePct < -0.1 ? "down" : "stable"
-    return { changePct, trend }
-  }, [spark])
-
-  const trend: "up" | "down" | "stable" = sparkStats?.trend ?? "stable"
-  const changePct = sparkStats?.changePct ?? 0
-
-  const volatility = useMemo(() => {
-    if (spark.length < 3) return 0
-    const mean = spark.reduce((a, b) => a + b, 0) / spark.length
-    const variance = spark.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / spark.length
-    return Math.sqrt(variance) / mean
-  }, [spark])
-
-  const sparkSummary = useMemo(() => {
-    if (spark.length < 2) return null
-    const window = 8
-    const recent = spark.slice(-window)
-    const prev = spark.slice(-window * 2, -window)
-    if (prev.length === 0) return null
-    const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length
-    const prevAvg = prev.reduce((a, b) => a + b, 0) / prev.length
-    const drift = prevAvg > 0 ? ((recentAvg - prevAvg) / prevAvg) * 100 : 0
-    return { drift, recentAvg, prevAvg }
-  }, [spark])
-
-  const marketSentiment = useMemo(() => {
-    if (!sparkStats || !sparkSummary) return null
-    const { drift } = sparkSummary
-    const momentum = drift >= 0.05 ? "acelerando" : drift <= -0.05 ? "desacelerando" : "sostenido"
-    const direction = trend === "up" ? "al alza" : trend === "down" ? "a la baja" : "lateral"
-    const volLabel = volatility > 0.008 ? "con volatilidad elevada" : volatility > 0.004 ? "con volatilidad moderada" : "con baja volatilidad"
-    return { momentum, direction, volLabel }
-  }, [sparkStats, sparkSummary, trend, volatility])
+  const { trend, changePct } = summary
 
   if (isLoading && !data) {
     return (
@@ -224,13 +194,8 @@ function OverviewSection({ data, spark, isLoading, error }: OverviewSectionProps
 
   const bestBid = data?.bestBid
   const bestAsk = data?.bestAsk
-  const avgPrice = data?.avgPrice || 0
   const globalSpread = data?.globalSpread || 0
   const exchangeCount = data?.rates?.length || 0
-
-  const brecha = bcvLatest && avgPrice > 0
-    ? ((avgPrice - bcvLatest.usd_ves) / bcvLatest.usd_ves) * 100
-    : null
 
   return (
     <div className="space-y-4">
@@ -279,14 +244,8 @@ function OverviewSection({ data, spark, isLoading, error }: OverviewSectionProps
       </div>
 
       <MarketSummaryCard
-        trend={trend}
-        changePct={changePct}
-        volatility={volatility}
-        sentiment={marketSentiment}
-        brecha={brecha}
-        bcv={bcvLatest?.usd_ves ?? null}
+        summary={summary}
         avgPrice={avgPrice}
-        hasData={spark.length >= 2}
       />
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -425,32 +384,30 @@ function TrendBadge({ trend, changePct }: { trend: "up" | "down" | "stable"; cha
 }
 
 type MarketSummaryCardProps = {
-  trend: "up" | "down" | "stable"
-  changePct: number
-  volatility: number
-  sentiment: {
-    momentum: string
-    direction: string
-    volLabel: string
-  } | null
-  brecha: number | null
-  bcv: number | null
+  summary: MarketSummary
   avgPrice: number
-  hasData: boolean
 }
 
-function MarketSummaryCard({
-  trend,
-  changePct,
-  volatility,
-  sentiment,
-  brecha,
-  bcv,
-  avgPrice,
-  hasData,
-}: MarketSummaryCardProps) {
+function MarketSummaryCard({ summary, avgPrice }: MarketSummaryCardProps) {
+  const { trend, changePct, volatility, sentiment, brecha, bcv, hasData } = summary
   const TrendIcon =
     trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus
+
+  if (!hasData || !sentiment) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-3 py-2">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground/50" />
+            <p className="text-sm text-muted-foreground">
+              Reuniendo datos para el análisis… vuelve en unos minutos.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   const trendColor =
     trend === "up"
       ? "text-green-600 dark:text-green-400"
@@ -458,108 +415,108 @@ function MarketSummaryCard({
       ? "text-red-600 dark:text-red-400"
       : "text-yellow-600 dark:text-yellow-400"
 
+  const trendChip =
+    trend === "up"
+      ? "bg-green-500/15 text-green-700 dark:text-green-300"
+      : trend === "down"
+      ? "bg-red-500/15 text-red-700 dark:text-red-300"
+      : "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300"
+
+  const momentumChip =
+    sentiment.momentum === "acelerando"
+      ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+      : sentiment.momentum === "desacelerando"
+      ? "bg-orange-500/15 text-orange-700 dark:text-orange-300"
+      : "bg-muted text-muted-foreground"
+
   return (
-    <Card>
+    <Card className="relative overflow-hidden border">
+      <div
+        className={`absolute inset-x-0 top-0 h-1 ${
+          trend === "up"
+            ? "bg-gradient-to-r from-green-500 to-emerald-400"
+            : trend === "down"
+            ? "bg-gradient-to-r from-red-500 to-rose-400"
+            : "bg-gradient-to-r from-yellow-500 to-amber-400"
+        }`}
+      />
       <CardContent className="pt-6">
-        {!hasData ? (
-          <div className="flex items-center gap-3 py-2">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground/50" />
-            <p className="text-sm text-muted-foreground">
-              Reuniendo datos para el análisis… vuelve en unos minutos.
-            </p>
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold ${trendChip}`}
+            >
+              <TrendIcon className="h-4 w-4" />
+              {trend === "up" ? "Al alza" : trend === "down" ? "A la baja" : "Lateral"}
+            </span>
+            <span
+              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${momentumChip}`}
+            >
+              {sentiment.momentum === "acelerando"
+                ? "↗ Acelerando"
+                : sentiment.momentum === "desacelerando"
+                ? "↘ Desacelerando"
+                : "→ Sin sobresaltos"}
+            </span>
           </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${
-                  trend === "up"
-                    ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-                    : trend === "down"
-                    ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
-                    : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
+
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            El USDT paralelo se mueve{" "}
+            <span className={`font-semibold ${trendColor}`}>
+              {sentiment.direction}
+            </span>{" "}
+            con{" "}
+            <span className="font-medium text-foreground">
+              {sentiment.volLabel}
+            </span>
+            {brecha !== null && bcv !== null ? (
+              <>
+                . Frente al BCV se paga{" "}
+                <span className="font-semibold text-foreground">
+                  {brecha.toFixed(2)}%
+                </span>{" "}
+                más por cada dólar.
+              </>
+            ) : (
+              <>.</>
+            )}
+          </p>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-xl border bg-gradient-to-b from-card to-muted/30 p-3 shadow-sm transition-transform hover:-translate-y-0.5">
+              <p
+                className={`text-xl font-bold tabular-nums ${
+                  changePct >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
                 }`}
               >
-                <TrendIcon className="h-4 w-4" />
-                {trend === "up" ? "Al alza" : trend === "down" ? "A la baja" : "Lateral"}
-              </span>
-              <span
-                className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
-                  sentiment?.momentum === "acelerando"
-                    ? "bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-300"
-                    : sentiment?.momentum === "desacelerando"
-                    ? "bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300"
-                    : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {sentiment?.momentum === "acelerando"
-                  ? "Acelerando"
-                  : sentiment?.momentum === "desacelerando"
-                  ? "Desacelerando"
-                  : "Sin cambios bruscos"}
-              </span>
+                {changePct > 0 ? "+" : ""}
+                {changePct.toFixed(2)}%
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Cambio 24h</p>
             </div>
-
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              El USDT paralelo se mueve{" "}
-              <span className={`font-semibold ${trendColor}`}>
-                {sentiment?.direction ?? "lateral"}
-              </span>{" "}
-              con{" "}
-              <span className="font-medium text-foreground">
-                {sentiment?.volLabel}
-              </span>
-              {brecha !== null && bcv !== null ? (
-                <>
-                  . Frente al BCV se paga{" "}
-                  <span className="font-semibold text-foreground">
-                    {brecha.toFixed(2)}%
-                  </span>{" "}
-                  más por cada dólar.
-                </>
-              ) : (
-                <>.</>
-              )}
-            </p>
-
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-lg border bg-muted/40 p-3">
-                <p
-                  className={`text-xl font-bold tabular-nums ${
-                    changePct >= 0
-                      ? "text-green-600 dark:text-green-400"
-                      : "text-red-600 dark:text-red-400"
-                  }`}
-                >
-                  {changePct > 0 ? "+" : ""}
-                  {changePct.toFixed(2)}%
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Cambio 24h</p>
-              </div>
-              <div className="rounded-lg border bg-muted/40 p-3">
-                <p className="text-xl font-bold tabular-nums">
-                  {(volatility * 100).toFixed(2)}%
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Volatilidad</p>
-              </div>
-              <div className="rounded-lg border bg-muted/40 p-3">
-                <p className="text-xl font-bold tabular-nums">
-                  {avgPrice.toLocaleString("es-VE", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">Precio medio</p>
-              </div>
-              <div className="rounded-lg border bg-muted/40 p-3">
-                <p className="text-xl font-bold tabular-nums">
-                  {brecha !== null ? `${brecha.toFixed(2)}%` : "—"}
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">vs. BCV</p>
-              </div>
+            <div className="rounded-xl border bg-gradient-to-border from-card to-muted/30 p-3 shadow-sm transition-transform hover:-translate-y-0.5">
+              <p className="text-xl font-bold tabular-nums">
+                {(volatility * 100).toFixed(2)}%
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Volatilidad</p>
+            </div>
+            <div className="rounded-xl border bg-gradient-to-border from-card to-muted/30 p-3 shadow-sm transition-transform hover:-translate-y-0.5">
+              <p className="text-xl font-bold tabular-nums">
+                {avgPrice.toLocaleString("es-VE", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Precio medio</p>
+            </div>
+            <div className="rounded-xl border bg-gradient-to-border from-card to-muted/30 p-3 shadow-sm transition-transform hover:-translate-y-0.5">
+              <p className="text-xl font-bold tabular-nums">
+                {brecha !== null ? `${brecha.toFixed(2)}%` : "—"}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">vs. BCV</p>
             </div>
           </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   )
