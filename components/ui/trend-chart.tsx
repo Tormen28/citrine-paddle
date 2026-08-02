@@ -206,8 +206,8 @@ export function TrendChart({ range }: { range: DataRange }) {
   if (isLoading && chartData.length === 0) {
     return (
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" />Tendencia USDT/VES</CardTitle></CardHeader>
-        <CardContent><Skeleton className="h-[350px] w-full" /></CardContent>
+        <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><TrendingUp className="h-4 w-4 text-muted-foreground" />Tendencia USDT/VES</CardTitle></CardHeader>
+        <CardContent className="pt-0"><Skeleton className="h-[350px] w-full rounded-xl" /></CardContent>
       </Card>
     )
   }
@@ -215,25 +215,25 @@ export function TrendChart({ range }: { range: DataRange }) {
   if (error && chartData.length === 0) {
     return (
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" />Tendencia USDT/VES</CardTitle></CardHeader>
-        <CardContent><div className="h-[350px] flex items-center justify-center text-red-500">Error: {error}</div></CardContent>
+        <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><TrendingUp className="h-4 w-4 text-muted-foreground" />Tendencia USDT/VES</CardTitle></CardHeader>
+        <CardContent className="pt-0"><div className="h-[350px] flex items-center justify-center text-sm text-red-500">Error: {error}</div></CardContent>
       </Card>
     )
   }
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-2">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" />Tendencia USDT/VES</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">{chartData.length} de {allData.length} lecturas</p>
+            <CardTitle className="flex items-center gap-2 text-base"><TrendingUp className="h-4 w-4 text-muted-foreground" />Tendencia USDT/VES</CardTitle>
+            <p className="text-xs text-muted-foreground mt-0.5">{chartData.length} de {allData.length} lecturas</p>
           </div>
           {latestPrice && (
             <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold">{latestPrice.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} VES</span>
+              <span className="text-xl font-bold tabular-nums tracking-tight">{latestPrice.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<span className="ml-1.5 text-sm font-medium text-muted-foreground">VES</span></span>
               {priceChange !== null && priceChangePercent !== null && (
-                <span className={`flex items-center gap-1 text-sm font-medium px-2 py-0.5 rounded ${priceChange >= 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${priceChange >= 0 ? "bg-green-500/15 text-green-700 dark:text-green-300" : "bg-red-500/15 text-red-700 dark:text-red-300"}`}>
                   {priceChange >= 0 ? "+" : ""}{priceChangePercent.toFixed(2)}%
                 </span>
               )}
@@ -241,10 +241,10 @@ export function TrendChart({ range }: { range: DataRange }) {
           )}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         <div
           ref={containerRef}
-          className="relative rounded-lg border bg-card overflow-hidden"
+          className="relative rounded-xl border bg-card/50 overflow-hidden shadow-inner"
           style={{ cursor: isDraggingState ? "grabbing" : "crosshair" }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove as any}
@@ -293,30 +293,30 @@ export function TrendChart({ range }: { range: DataRange }) {
           </svg>
 {hoverIdx !== null && hoverIdx < chartData.length && (
               <div
-                className="absolute z-50 pointer-events-none bg-popover/95 border rounded-lg p-3 shadow-xl text-xs backdrop-blur-sm"
+                className="absolute z-50 pointer-events-none bg-popover/95 border rounded-xl p-3 shadow-2xl text-xs backdrop-blur-md"
                 style={{ left: Math.min(mousePos.x + 15, (containerRef.current?.clientWidth ?? W) - 180), top: Math.max(mousePos.y - 120, 10) }}
               >
-                <div className="text-muted-foreground mb-1.5 text-[10px]">
+                <div className="text-muted-foreground mb-2 text-[10px] font-medium">
                   {formatTooltipTime(chartData[hoverIdx].timestamp)}
                 </div>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1">
                   <span className="text-muted-foreground">Compra</span>
-                  <span className="font-mono text-right text-green-500">{chartData[hoverIdx].bestBid.toFixed(2)}</span>
+                  <span className="font-mono text-right tabular-nums text-green-500">{chartData[hoverIdx].bestBid.toFixed(2)}</span>
                   <span className="text-muted-foreground">Venta</span>
-                  <span className="font-mono text-right text-red-500">{chartData[hoverIdx].bestAsk.toFixed(2)}</span>
+                  <span className="font-mono text-right tabular-nums text-red-500">{chartData[hoverIdx].bestAsk.toFixed(2)}</span>
                   <span className="text-muted-foreground">Prom</span>
-                  <span className="font-mono text-right text-indigo-500">{chartData[hoverIdx].avg.toFixed(2)}</span>
+                  <span className="font-mono text-right tabular-nums text-indigo-500">{chartData[hoverIdx].avg.toFixed(2)}</span>
                   <span className="text-muted-foreground">Spread</span>
-                  <span className="font-mono text-right text-amber-500">{((chartData[hoverIdx].bestAsk - chartData[hoverIdx].bestBid) / chartData[hoverIdx].bestAsk * 100).toFixed(2)}%</span>
+                  <span className="font-mono text-right tabular-nums text-amber-500">{((chartData[hoverIdx].bestAsk - chartData[hoverIdx].bestBid) / chartData[hoverIdx].bestAsk * 100).toFixed(2)}%</span>
                 </div>
               </div>
             )}
           </div>
-          <div className="flex items-center justify-center gap-6 mt-3 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-green-500" /><span>Mejor Compra</span></div>
-          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-500" /><span>Mejor Venta</span></div>
-          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-indigo-500" /><span>Promedio</span></div>
-          <span className="text-xs text-muted-foreground ml-2">Scroll=zoom | Arrastra para navegar</span>
+          <div className="flex items-center justify-center gap-6 mt-3 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-sm shadow-green-500/30" /><span>Mejor Compra</span></div>
+          <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm shadow-red-500/30" /><span>Mejor Venta</span></div>
+          <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-sm shadow-indigo-500/30" /><span>Promedio</span></div>
+          <span className="text-[10px] text-muted-foreground/60 ml-2">Scroll=zoom · Arrastra</span>
         </div>
       </CardContent>
     </Card>

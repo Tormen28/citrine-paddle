@@ -180,17 +180,17 @@ export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProp
   if (isLoading && !metrics) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Activity className="h-4 w-4 text-muted-foreground" />
             Analisis Algoritmico
           </CardTitle>
-          <CardDescription>Datos calculados en tiempo real</CardDescription>
+          <CardDescription className="text-xs">Datos calculados en tiempo real</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <CardContent className="pt-0">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-24" />
+              <Skeleton key={i} className="h-24 rounded-xl" />
             ))}
           </div>
         </CardContent>
@@ -199,162 +199,128 @@ export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProp
   }
 
   const TrendIcon = metrics.trend === "up" ? TrendingUp : metrics.trend === "down" ? TrendingDown : Minus
-  const trendColor = metrics.trend === "up" ? "text-green-500" : metrics.trend === "down" ? "text-red-500" : "text-yellow-500"
+  const trendColor = metrics.trend === "up" ? "text-green-600 dark:text-green-400" : metrics.trend === "down" ? "text-red-600 dark:text-red-400" : "text-yellow-600 dark:text-yellow-400"
   const trendLabel = metrics.trend === "up" ? "Subiendo" : metrics.trend === "down" ? "Bajando" : "Estable"
 
-  // Determine overall market signal
   let overallSignal = "Neutral"
-  let signalColor = "text-yellow-500"
-  let signalIcon = <Minus className="h-5 w-5" />
+  let signalColor = "text-yellow-600 dark:text-yellow-400"
+  let signalIcon = <Minus className="h-4 w-4" />
   if (analysis.rsi > 70) {
-    overallSignal = "Sobrecompra - Precaucion"
-    signalColor = "text-red-500"
-    signalIcon = <AlertTriangle className="h-5 w-5" />
+    overallSignal = "Sobrecompra"
+    signalColor = "text-red-600 dark:text-red-400"
+    signalIcon = <AlertTriangle className="h-4 w-4" />
   } else if (analysis.rsi < 30) {
-    overallSignal = "Sobreventa - Oportunidad"
-    signalColor = "text-green-500"
-    signalIcon = <Target className="h-5 w-5" />
+    overallSignal = "Sobreventa"
+    signalColor = "text-green-600 dark:text-green-400"
+    signalIcon = <Target className="h-4 w-4" />
   } else if (analysis.ma5 > analysis.ma20 && metrics.trend === "up") {
-    overallSignal = "Alcista - Continua subiendo"
-    signalColor = "text-green-500"
-    signalIcon = <TrendingUp className="h-5 w-5" />
+    overallSignal = "Alcista"
+    signalColor = "text-green-600 dark:text-green-400"
+    signalIcon = <TrendingUp className="h-4 w-4" />
   } else if (analysis.ma5 < analysis.ma20 && metrics.trend === "down") {
-    overallSignal = "Bajista - Continua bajando"
-    signalColor = "text-red-500"
-    signalIcon = <TrendingDown className="h-5 w-5" />
+    overallSignal = "Bajista"
+    signalColor = "text-red-600 dark:text-red-400"
+    signalIcon = <TrendingDown className="h-4 w-4" />
   }
+
+  const metricCard = (icon: React.ReactNode, label: string, value: string, color: string, sub: string) => (
+    <div className="p-3.5 rounded-xl border bg-gradient-to-b from-card to-muted/20 transition-transform hover:-translate-y-0.5">
+      <div className="flex items-center gap-1.5 text-muted-foreground mb-2">
+        {icon}
+        <span className="text-[10px] font-medium uppercase tracking-wider">{label}</span>
+      </div>
+      <div className={`text-xl font-bold tabular-nums ${color}`}>{value}</div>
+      <p className="text-[10px] text-muted-foreground mt-1">{sub}</p>
+    </div>
+  )
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Activity className="h-5 w-5" />
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Activity className="h-4 w-4 text-muted-foreground" />
           Analisis Algoritmico
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs">
           {historyStats
             ? `${historyStats.totalSnapshots} snapshots guardados en Supabase`
             : "Cargando datos historicos..."}
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        {/* Row 1: Market State */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="p-3 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-              <TrendingUp className="h-4 w-4" />
-              <span>Tendencia</span>
-            </div>
-            <div className={`flex items-center gap-2 text-2xl font-bold ${trendColor}`}>
-              <TrendIcon className="h-5 w-5" />
-              <span>{trendLabel}</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {metrics.trendStrength.toFixed(0)}% senales positivas
-            </p>
-          </div>
-
-          <div className="p-3 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-              <BarChart3 className="h-4 w-4" />
-              <span>Volatilidad</span>
-            </div>
-            <div className={`text-2xl font-bold ${
-              metrics.volatility > 3 ? "text-red-500" :
-              metrics.volatility > 1 ? "text-yellow-500" : "text-green-500"
-            }`}>
-              {metrics.volatility.toFixed(2)}%
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {metrics.volatility > 3 ? "Alta" : metrics.volatility > 1 ? "Media" : "Baja"}
-            </p>
-          </div>
-
-          <div className="p-3 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-              <Clock className="h-4 w-4" />
-              <span>Promedio (MA5)</span>
-            </div>
-            <div className="text-2xl font-bold">
-              {metrics.movingAverage > 0 ? formatPrice(metrics.movingAverage) : "--"}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">VES/USDT</p>
-          </div>
-
-          <div className="p-3 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-              <Activity className="h-4 w-4" />
-              <span>Cambio</span>
-            </div>
-            <div className={`text-2xl font-bold ${
-              metrics.priceChange > 0 ? "text-green-500" :
-              metrics.priceChange < 0 ? "text-red-500" : ""
-            }`}>
-              {metrics.priceChange !== 0 ? (
-                <>
-                  {metrics.priceChange > 0 ? "+" : ""}
-                  {metrics.priceChangePercent.toFixed(2)}%
-                </>
-              ) : "--"}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              vs lectura anterior
-            </p>
-          </div>
+      <CardContent className="space-y-4 pt-0">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          {metricCard(
+            <TrendingUp className="h-3.5 w-3.5" />,
+            "Tendencia",
+            trendLabel,
+            trendColor,
+            `${metrics.trendStrength.toFixed(0)}% senales positivas`
+          )}
+          {metricCard(
+            <BarChart3 className="h-3.5 w-3.5" />,
+            "Volatilidad",
+            `${metrics.volatility.toFixed(2)}%`,
+            metrics.volatility > 3 ? "text-red-600 dark:text-red-400" : metrics.volatility > 1 ? "text-yellow-600 dark:text-yellow-400" : "text-green-600 dark:text-green-400",
+            metrics.volatility > 3 ? "Alta" : metrics.volatility > 1 ? "Media" : "Baja"
+          )}
+          {metricCard(
+            <Clock className="h-3.5 w-3.5" />,
+            "Promedio (MA5)",
+            metrics.movingAverage > 0 ? formatPrice(metrics.movingAverage) : "--",
+            "text-foreground",
+            "VES/USDT"
+          )}
+          {metricCard(
+            <Activity className="h-3.5 w-3.5" />,
+            "Cambio",
+            metrics.priceChange !== 0 ? `${metrics.priceChange > 0 ? "+" : ""}${metrics.priceChangePercent.toFixed(2)}%` : "--",
+            metrics.priceChange > 0 ? "text-green-600 dark:text-green-400" : metrics.priceChange < 0 ? "text-red-600 dark:text-red-400" : "text-foreground",
+            "vs lectura anterior"
+          )}
         </div>
 
-        {/* Row 2: Technical Analysis */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="p-3 rounded-lg bg-muted/50">
-            <div className="text-sm text-muted-foreground mb-2">RSI (14)</div>
-            <div className={`text-2xl font-bold ${analysis.rsi > 70 ? "text-red-500" : analysis.rsi < 30 ? "text-green-500" : ""}`}>
-              {analysis.rsi.toFixed(2)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {analysis.rsi > 70 ? "Sobrecompra" : analysis.rsi < 30 ? "Sobreventa" : "Neutral"}
-            </p>
-          </div>
-
-          <div className="p-3 rounded-lg bg-muted/50">
-            <div className="text-sm text-muted-foreground mb-2">Señal MA</div>
-            <div className={`text-2xl font-bold ${analysis.ma5 > analysis.ma20 ? "text-green-500" : "text-red-500"}`}>
-              {analysis.ma5 > analysis.ma20 ? "Alcista" : "Bajista"}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              MA5: {formatPrice(analysis.ma5)} vs MA20: {formatPrice(analysis.ma20)}
-            </p>
-          </div>
-
-          <div className="p-3 rounded-lg bg-muted/50">
-            <div className="text-sm text-muted-foreground mb-2">Escenario Probable</div>
-            <div className="text-lg font-bold">{analysis.scenario}</div>
-            <p className="text-xs text-muted-foreground mt-1">Proximas horas</p>
-          </div>
-
-          <div className="p-3 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-              <ShieldCheck className="h-4 w-4" />
-              <span>Senal General</span>
-            </div>
-            <div className={`text-lg font-bold ${signalColor} flex items-center gap-2`}>
-              {signalIcon}
-              <span>{overallSignal}</span>
-            </div>
-          </div>
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          {metricCard(
+            <Minus className="h-3.5 w-3.5" />,
+            "RSI (14)",
+            analysis.rsi.toFixed(2),
+            analysis.rsi > 70 ? "text-red-600 dark:text-red-400" : analysis.rsi < 30 ? "text-green-600 dark:text-green-400" : "text-foreground",
+            analysis.rsi > 70 ? "Sobrecompra" : analysis.rsi < 30 ? "Sobreventa" : "Neutral"
+          )}
+          {metricCard(
+            <ArrowRight className="h-3.5 w-3.5" />,
+            "Senal MA",
+            analysis.ma5 > analysis.ma20 ? "Alcista" : "Bajista",
+            analysis.ma5 > analysis.ma20 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400",
+            `MA5: ${formatPrice(analysis.ma5)} vs MA20: ${formatPrice(analysis.ma20)}`
+          )}
+          {metricCard(
+            <BarChart3 className="h-3.5 w-3.5" />,
+            "Escenario",
+            analysis.scenario,
+            "text-foreground",
+            "Proximas horas"
+          )}
+          {metricCard(
+            signalIcon,
+            "Senal General",
+            overallSignal,
+            signalColor,
+            ""
+          )}
         </div>
 
-        {/* Row 3: Historical Data Summary */}
         {historyStats && (
-          <div className="p-4 rounded-lg bg-muted/30 border">
+          <div className="p-4 rounded-xl border bg-gradient-to-b from-card to-muted/20">
             <div className="flex items-center gap-2 mb-3">
-              <Database className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Datos Guardados en Supabase</span>
+              <Database className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Datos Guardados</span>
             </div>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5 text-sm">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5 text-xs">
               <div>
                 <span className="text-muted-foreground">Snapshots:</span>
-                <span className="ml-2 font-bold">{historyStats.totalSnapshots}</span>
+                <span className="ml-2 font-bold tabular-nums">{historyStats.totalSnapshots}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">Desde:</span>
@@ -366,51 +332,51 @@ export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProp
               </div>
               <div>
                 <span className="text-muted-foreground">Rango:</span>
-                <span className="ml-2">
+                <span className="ml-2 tabular-nums">
                   {formatPrice(historyStats.minPrice)} - {formatPrice(historyStats.maxPrice)} VES
                 </span>
               </div>
               <div>
                 <span className="text-muted-foreground">Fluctuacion:</span>
-                <span className="ml-2 font-bold">{historyStats.priceRangePercent.toFixed(2)}%</span>
+                <span className="ml-2 font-bold tabular-nums">{historyStats.priceRangePercent.toFixed(2)}%</span>
               </div>
             </div>
           </div>
         )}
 
         {dataError && (
-          <div className="p-4 rounded-lg bg-yellow-50 border border-yellow-200">
-            <p className="text-sm text-yellow-800">{dataError}</p>
+          <div className="p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-xs text-yellow-700 dark:text-yellow-300">
+            {dataError}
           </div>
         )}
 
         {analysisError && (
-          <div className="p-4 rounded-lg bg-red-50 border border-red-200">
-            <p className="text-sm text-red-800">{analysisError}</p>
+          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-700 dark:text-red-300">
+            {analysisError}
           </div>
         )}
 
-        {/* Arbitrage */}
         {metrics.arbitrage && metrics.arbitrage.profitPercent > 0 && (
-          <div className="p-4 rounded-lg bg-green-50 border border-green-200">
+          <div className="relative overflow-hidden rounded-xl border bg-green-500/10 border-green-500/30 p-4">
+            <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-green-500 to-emerald-400" />
             <div className="flex items-center gap-2 mb-2">
-              <Zap className="h-5 w-5 text-green-600" />
-              <span className="font-semibold text-green-800">Oportunidad de Arbitraje</span>
+              <Zap className="h-4 w-4 text-green-600 dark:text-green-400" />
+              <span className="font-semibold text-sm text-green-800 dark:text-green-200">Oportunidad de Arbitraje</span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-green-700">
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-green-700 dark:text-green-300">
                 Comprar en <strong>{formatExchangeName(metrics.arbitrage.buyExchange)}</strong>
               </span>
-              <ArrowRight className="h-4 w-4 text-green-500" />
-              <span className="text-green-700">
+              <ArrowRight className="h-3.5 w-3.5 text-green-500" />
+              <span className="text-green-700 dark:text-green-300">
                 Vender en <strong>{formatExchangeName(metrics.arbitrage.sellExchange)}</strong>
               </span>
             </div>
             <div className="flex justify-between items-center mt-2">
-              <span className="text-sm text-green-600">
+              <span className="text-xs tabular-nums text-green-600 dark:text-green-400">
                 {formatPrice(metrics.arbitrage.buyPrice)} - {formatPrice(metrics.arbitrage.sellPrice)} VES
               </span>
-              <span className="text-lg font-bold text-green-600">
+              <span className="text-lg font-bold tabular-nums text-green-600 dark:text-green-400">
                 +{metrics.arbitrage.profitPercent.toFixed(2)}%
               </span>
             </div>
@@ -418,8 +384,8 @@ export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProp
         )}
 
         {(!metrics.arbitrage || metrics.arbitrage.profitPercent <= 0) && (
-          <div className="p-4 rounded-lg bg-muted/50 text-center">
-            <p className="text-sm text-muted-foreground">
+          <div className="p-4 rounded-xl border bg-muted/30 text-center">
+            <p className="text-xs text-muted-foreground">
               No hay oportunidad de arbitraje significativa en este momento
             </p>
           </div>

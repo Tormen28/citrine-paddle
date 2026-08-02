@@ -642,11 +642,11 @@ export function PriceProjection({ advertisements = [], tradeType, isLoading }: P
   const getTrendBadge = () => {
     switch (projection.trend) {
       case "up":
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Tendencia al alza</Badge>
+        return <Badge className="bg-green-500/15 text-green-700 dark:text-green-300 border-0 text-[10px] font-semibold">Tendencia al alza</Badge>
       case "down":
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Tendencia a la baja</Badge>
+        return <Badge className="bg-red-500/15 text-red-700 dark:text-red-300 border-0 text-[10px] font-semibold">Tendencia a la baja</Badge>
       default:
-        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">Precios estables</Badge>
+        return <Badge className="bg-muted text-muted-foreground border-0 text-[10px] font-semibold">Precios estables</Badge>
     }
   }
 
@@ -657,110 +657,99 @@ export function PriceProjection({ advertisements = [], tradeType, isLoading }: P
 
   return (
     <div className="space-y-6">
-      <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 flex items-start gap-2">
-        <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-        <div>
-          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-            Solo estimación algorítmica. No es consejo financiero.
-          </p>
-        </div>
+      <div className="rounded-xl border bg-amber-500/10 border-amber-500/30 p-3 flex items-start gap-2">
+        <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+        <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+          Solo estimacion algoritmica. No es consejo financiero.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-muted/50 p-4 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center">
+        <div className="p-4 rounded-xl border bg-gradient-to-b from-card to-muted/20">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
               {getTrendIcon()}
-              <span className="ml-2 font-medium">Análisis de Mercado</span>
+              <span className="text-sm font-semibold">Analisis de Mercado</span>
             </div>
             {getTrendBadge()}
           </div>
-          <div className="space-y-2 mt-3">
+          <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Precio mínimo:</span>
-              <span className="font-medium">
+              <span className="text-xs text-muted-foreground">Precio minimo:</span>
+              <span className="text-sm font-semibold tabular-nums">
                 {projection.currentPrices.min ? formatCurrency(projection.currentPrices.min, "VES") : "-"}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Precio promedio:</span>
-              <span className="font-medium">
+              <span className="text-xs text-muted-foreground">Precio promedio:</span>
+              <span className="text-sm font-semibold tabular-nums">
                 {projection.currentPrices.avg ? formatCurrency(projection.currentPrices.avg, "VES") : "-"}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Precio máximo:</span>
-              <span className="font-medium">
+              <span className="text-xs text-muted-foreground">Precio maximo:</span>
+              <span className="text-sm font-semibold tabular-nums">
                 {projection.currentPrices.max ? formatCurrency(projection.currentPrices.max, "VES") : "-"}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="bg-muted/50 p-4 rounded-lg">
-          <h3 className="font-medium mb-2">Proyección de Precios</h3>
+        <div className="p-4 rounded-xl border bg-gradient-to-b from-card to-muted/20">
+          <h3 className="text-sm font-semibold mb-3">Proyeccion de Precios</h3>
           <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Precio actual ({getPriceTypeName(priceBaseType)}):</span>
-            <span className="font-medium">{currentPrice ? formatCurrency(currentPrice, "VES") : "-"}</span>
+            <span className="text-xs text-muted-foreground">Precio actual ({getPriceTypeName(priceBaseType)}):</span>
+            <span className="text-sm font-semibold tabular-nums">{currentPrice ? formatCurrency(currentPrice, "VES") : "-"}</span>
           </div>
           {projectedPrice && (
             <div className="flex justify-between items-center mt-2">
-              <span className="text-sm text-muted-foreground">Precio proyectado (7 días):</span>
-              <span className="font-bold">
+              <span className="text-xs text-muted-foreground">Proyectado (7 dias):</span>
+              <span className="text-sm font-bold tabular-nums">
                 {formatCurrency(projectedPrice, "VES")}
                 {projectedChange > 0 ? (
-                  <ArrowUp className="inline h-4 w-4 ml-1 text-green-500" />
+                  <ArrowUp className="inline h-3.5 w-3.5 ml-1 text-green-500" />
                 ) : projectedChange < 0 ? (
-                  <ArrowDown className="inline h-4 w-4 ml-1 text-red-500" />
+                  <ArrowDown className="inline h-3.5 w-3.5 ml-1 text-red-500" />
                 ) : null}
               </span>
             </div>
           )}
           {projectedChange && (
             <div className="flex justify-between items-center mt-1">
-              <span className="text-sm text-muted-foreground">Cambio proyectado:</span>
-              <span
-                className={`font-medium ${projectedChange > 0 ? "text-green-600" : projectedChange < 0 ? "text-red-600" : ""}`}
-              >
+              <span className="text-xs text-muted-foreground">Cambio proyectado:</span>
+              <span className={`text-sm font-medium tabular-nums ${projectedChange > 0 ? "text-green-600 dark:text-green-400" : projectedChange < 0 ? "text-red-600 dark:text-red-400" : ""}`}>
                 {projectedChange.toFixed(2)}%
               </span>
             </div>
           )}
 
-          {/* Mostrar proyecciones para todos los tipos de precio */}
-          <div className="mt-4 pt-3 border-t border-border">
-            <h4 className="text-sm font-medium mb-2">Proyecciones a 7 días:</h4>
+          <div className="mt-4 pt-3 border-t">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Proyecciones a 7 dias</h4>
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">Precio mínimo:</span>
-                <span
-                  className={`font-medium ${projection.projectedChanges.min && projection.projectedChanges.min > 0 ? "text-green-600" : projection.projectedChanges.min && projection.projectedChanges.min < 0 ? "text-red-600" : ""}`}
-                >
+                <span className="text-muted-foreground">Min:</span>
+                <span className={`tabular-nums font-medium ${projection.projectedChanges.min && projection.projectedChanges.min > 0 ? "text-green-600 dark:text-green-400" : projection.projectedChanges.min && projection.projectedChanges.min < 0 ? "text-red-600 dark:text-red-400" : ""}`}>
                   {projection.projectedPrices.min ? formatCurrency(projection.projectedPrices.min, "VES") : "-"}
                   {projection.projectedChanges.min && projection.projectedChanges.min !== 0 && (
-                    <span className="ml-1">({projection.projectedChanges.min.toFixed(2)}%)</span>
+                    <span className="ml-1 text-[10px]">({projection.projectedChanges.min.toFixed(2)}%)</span>
                   )}
                 </span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">Precio promedio:</span>
-                <span
-                  className={`font-medium ${projection.projectedChanges.avg && projection.projectedChanges.avg > 0 ? "text-green-600" : projection.projectedChanges.avg && projection.projectedChanges.avg < 0 ? "text-red-600" : ""}`}
-                >
+                <span className="text-muted-foreground">Avg:</span>
+                <span className={`tabular-nums font-medium ${projection.projectedChanges.avg && projection.projectedChanges.avg > 0 ? "text-green-600 dark:text-green-400" : projection.projectedChanges.avg && projection.projectedChanges.avg < 0 ? "text-red-600 dark:text-red-400" : ""}`}>
                   {projection.projectedPrices.avg ? formatCurrency(projection.projectedPrices.avg, "VES") : "-"}
                   {projection.projectedChanges.avg && projection.projectedChanges.avg !== 0 && (
-                    <span className="ml-1">({projection.projectedChanges.avg.toFixed(2)}%)</span>
+                    <span className="ml-1 text-[10px]">({projection.projectedChanges.avg.toFixed(2)}%)</span>
                   )}
                 </span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">Precio máximo:</span>
-                <span
-                  className={`font-medium ${projection.projectedChanges.max && projection.projectedChanges.max > 0 ? "text-green-600" : projection.projectedChanges.max && projection.projectedChanges.max < 0 ? "text-red-600" : ""}`}
-                >
+                <span className="text-muted-foreground">Max:</span>
+                <span className={`tabular-nums font-medium ${projection.projectedChanges.max && projection.projectedChanges.max > 0 ? "text-green-600 dark:text-green-400" : projection.projectedChanges.max && projection.projectedChanges.max < 0 ? "text-red-600 dark:text-red-400" : ""}`}>
                   {projection.projectedPrices.max ? formatCurrency(projection.projectedPrices.max, "VES") : "-"}
                   {projection.projectedChanges.max && projection.projectedChanges.max !== 0 && (
-                    <span className="ml-1">({projection.projectedChanges.max.toFixed(2)}%)</span>
+                    <span className="ml-1 text-[10px]">({projection.projectedChanges.max.toFixed(2)}%)</span>
                   )}
                 </span>
               </div>
@@ -768,46 +757,40 @@ export function PriceProjection({ advertisements = [], tradeType, isLoading }: P
           </div>
         </div>
 
-        <div className="bg-muted/50 p-4 rounded-lg">
-          <h3 className="font-medium mb-2">Recomendación</h3>
-          <p className="text-sm mb-2">{projection.recommendation}</p>
-          <div className="mt-2 p-2 bg-muted rounded-md">
-            <p className="text-sm font-medium">Mejor momento:</p>
-            <p className="text-sm">{projection.bestTime}</p>
+        <div className="p-4 rounded-xl border bg-gradient-to-b from-card to-muted/20">
+          <h3 className="text-sm font-semibold mb-3">Recomendacion</h3>
+          <p className="text-xs leading-relaxed mb-3">{projection.recommendation}</p>
+          <div className="p-2.5 rounded-lg bg-muted/50">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Mejor momento</p>
+            <p className="text-xs">{projection.bestTime}</p>
           </div>
-          <div className="text-xs text-muted-foreground mt-3">Basado en {advertisements.length} anuncios activos</div>
+          <div className="text-[10px] text-muted-foreground mt-3">Basado en {advertisements.length} anuncios activos</div>
         </div>
       </div>
 
-      {/* Filtros */}
-      <div className="bg-muted/30 p-4 rounded-lg">
+      <div className="rounded-xl border bg-muted/30 p-4">
         <div className="flex items-center mb-3">
-          <Filter className="h-5 w-5 mr-2 text-primary" />
-          <h3 className="font-medium">Filtrar proyecciones</h3>
+          <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+          <h3 className="text-sm font-semibold">Filtrar proyecciones</h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          {/* Filtro de tipo de precio */}
           <div>
-            <label className="text-sm font-medium mb-2 block">Tipo de precio base</label>
+            <label className="text-xs font-medium mb-2 block text-muted-foreground">Tipo de precio base</label>
             <Select value={priceBaseType} onValueChange={(value) => setPriceBaseType(value as PriceBaseType)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Seleccionar tipo de precio" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="min">Precio mínimo</SelectItem>
+                <SelectItem value="min">Precio minimo</SelectItem>
                 <SelectItem value="avg">Precio promedio</SelectItem>
-                <SelectItem value="max">Precio máximo</SelectItem>
+                <SelectItem value="max">Precio maximo</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground mt-1">
-              Selecciona el tipo de precio que se usará como base para las proyecciones
-            </p>
           </div>
 
-          {/* Filtro de rango de fechas */}
           <div>
-            <label className="text-sm font-medium mb-2 block">Rango de fechas</label>
+            <label className="text-xs font-medium mb-2 block text-muted-foreground">Rango de fechas</label>
             <DatePickerSimple
               dateRange={dateRange}
               setDateRange={(newRange) => {
@@ -820,106 +803,90 @@ export function PriceProjection({ advertisements = [], tradeType, isLoading }: P
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button onClick={handleApplyFilter} variant="default">
+          <Button onClick={handleApplyFilter} variant="default" size="sm">
             Aplicar filtros
           </Button>
-          <Button onClick={handleResetFilter} variant="outline">
+          <Button onClick={handleResetFilter} variant="outline" size="sm">
             Resetear
           </Button>
         </div>
 
         {applyDateFilter && (
-          <div className="mt-2 text-sm text-muted-foreground">
-            Mostrando proyecciones desde {formatDate(dateRange.from)} hasta {formatDate(dateRange.to)}
+          <div className="mt-2 text-xs text-muted-foreground">
+            Mostrando desde {formatDate(dateRange.from)} hasta {formatDate(dateRange.to)}
           </div>
         )}
       </div>
 
-      {/* Tabla de proyección de precios por fecha */}
-      <div className="bg-muted/30 p-4 rounded-lg">
+      <div className="rounded-xl border bg-muted/30 p-4">
         <div className="flex items-center mb-3">
-          <Calendar className="h-5 w-5 mr-2 text-primary" />
-          <h3 className="font-medium">Proyección de precios por fecha</h3>
+          <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+          <h3 className="text-sm font-semibold">Proyeccion de precios por fecha</h3>
           {applyDateFilter && (
-            <Badge variant="outline" className="ml-2 text-xs">
-              {projection.pricePoints.length} fechas en el rango seleccionado
+            <Badge variant="outline" className="ml-2 text-[10px]">
+              {projection.pricePoints.length} fechas
             </Badge>
           )}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b">
-                <th className="text-left py-2 px-2">Fecha</th>
-                <th className="text-right py-2 px-2">Precio mínimo</th>
-                <th className="text-right py-2 px-2">Precio promedio</th>
-                <th className="text-right py-2 px-2">Precio máximo</th>
-                <th className="text-left py-2 px-2">Evento</th>
+              <tr className="border-b text-[10px] uppercase tracking-wider text-muted-foreground">
+                <th className="text-left py-2 px-2 font-semibold">Fecha</th>
+                <th className="text-right py-2 px-2 font-semibold">Min</th>
+                <th className="text-right py-2 px-2 font-semibold">Promedio</th>
+                <th className="text-right py-2 px-2 font-semibold">Max</th>
+                <th className="text-left py-2 px-2 font-semibold">Evento</th>
               </tr>
             </thead>
             <tbody>
               {projection.pricePoints.length > 0 ? (
                 projection.pricePoints.map((point, index) => (
-                  <tr key={index} className={`border-b ${point.event.includes("✓") ? "bg-primary/10" : ""}`}>
-                    <td className="py-2 px-2">{isSameDay(point.date, new Date()) ? "Hoy" : formatDate(point.date)}</td>
-                    <td className="text-right py-2 px-2">
-                      <div className="flex items-center justify-end">
-                        <span className="font-medium">{formatCurrency(point.prices.min, "VES")}</span>
-                        {index > 0 && (
-                          <span
-                            className={`text-xs ml-1 ${point.changes.min > 0 ? "text-green-600" : point.changes.min < 0 ? "text-red-600" : ""}`}
-                          >
-                            {index === 0 ? "" : `(${point.changes.min.toFixed(1)}%)`}
-                          </span>
-                        )}
-                      </div>
+                  <tr key={index} className={`border-b last:border-0 hover:bg-muted/30 transition-colors ${point.event.includes("✓") ? "bg-green-500/5" : ""}`}>
+                    <td className="py-2.5 px-2 text-xs">{isSameDay(point.date, new Date()) ? "Hoy" : formatDate(point.date)}</td>
+                    <td className="text-right py-2.5 px-2">
+                      <span className="tabular-nums text-xs">{formatCurrency(point.prices.min, "VES")}</span>
+                      {index > 0 && point.changes.min !== 0 && (
+                        <span className={`text-[10px] ml-1 ${point.changes.min > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                          ({point.changes.min.toFixed(1)}%)
+                        </span>
+                      )}
                     </td>
-                    <td className="text-right py-2 px-2">
-                      <div className="flex items-center justify-end">
-                        <span className="font-medium">{formatCurrency(point.prices.avg, "VES")}</span>
-                        {index > 0 && (
-                          <span
-                            className={`text-xs ml-1 ${point.changes.avg > 0 ? "text-green-600" : point.changes.avg < 0 ? "text-red-600" : ""}`}
-                          >
-                            {index === 0 ? "" : `(${point.changes.avg.toFixed(1)}%)`}
-                          </span>
-                        )}
-                      </div>
+                    <td className="text-right py-2.5 px-2">
+                      <span className="tabular-nums text-xs font-medium">{formatCurrency(point.prices.avg, "VES")}</span>
+                      {index > 0 && point.changes.avg !== 0 && (
+                        <span className={`text-[10px] ml-1 ${point.changes.avg > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                          ({point.changes.avg.toFixed(1)}%)
+                        </span>
+                      )}
                     </td>
-                    <td className="text-right py-2 px-2">
-                      <div className="flex items-center justify-end">
-                        <span className="font-medium">{formatCurrency(point.prices.max, "VES")}</span>
-                        {index > 0 && (
-                          <span
-                            className={`text-xs ml-1 ${point.changes.max > 0 ? "text-green-600" : point.changes.max < 0 ? "text-red-600" : ""}`}
-                          >
-                            {index === 0 ? "" : `(${point.changes.max.toFixed(1)}%)`}
-                          </span>
-                        )}
-                      </div>
+                    <td className="text-right py-2.5 px-2">
+                      <span className="tabular-nums text-xs">{formatCurrency(point.prices.max, "VES")}</span>
+                      {index > 0 && point.changes.max !== 0 && (
+                        <span className={`text-[10px] ml-1 ${point.changes.max > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                          ({point.changes.max.toFixed(1)}%)
+                        </span>
+                      )}
                     </td>
-                    <td className={`py-2 px-2 ${point.event.includes("✓") ? "font-medium text-primary" : ""}`}>
+                    <td className={`py-2.5 px-2 text-xs ${point.event.includes("✓") ? "font-semibold text-green-700 dark:text-green-300" : ""}`}>
                       {point.event}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="py-4 text-center text-muted-foreground">
-                    No hay proyecciones disponibles para el rango de fechas seleccionado.
+                  <td colSpan={5} className="py-4 text-center text-xs text-muted-foreground">
+                    No hay proyecciones para el rango seleccionado.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-muted-foreground mt-3">
-          Nota: Esta proyección es una estimación basada en los datos actuales del mercado y puede variar.
-        </p>
       </div>
 
       <div className="flex items-center justify-end">
-        <Badge variant="outline" className="text-xs">
+        <Badge variant="outline" className="text-[10px]">
           Fuente: Binance P2P
         </Badge>
       </div>
