@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AlertCircle, RefreshCw, Bell, Sun, Moon } from "lucide-react"
 import { useTheme } from "next-themes"
-import { useRates } from "@/hooks/use-rates"
+import type { RatesResponse } from "@/hooks/use-rates"
 
 type Section = "overview" | "exchanges" | "analisis" | "config"
 
@@ -14,6 +14,11 @@ interface DashboardHeaderProps {
   onSectionChange: (section: Section) => void
   currentSection: Section
   alertCount?: number
+  data?: RatesResponse | null
+  isLoading?: boolean
+  error?: string | null
+  lastUpdated?: Date | null
+  onRefresh?: () => void
 }
 
 function getRelativeTime(date: Date | null): string {
@@ -29,9 +34,13 @@ export function DashboardHeader({
   onSectionChange,
   currentSection,
   alertCount = 0,
+  data,
+  isLoading = false,
+  error = null,
+  lastUpdated = null,
+  onRefresh,
 }: DashboardHeaderProps) {
   const { theme, setTheme } = useTheme()
-  const { data, isLoading, error, lastUpdated, refresh } = useRates()
   const [relativeTime, setRelativeTime] = useState<string>("")
 
   useEffect(() => {
@@ -76,7 +85,7 @@ export function DashboardHeader({
           <Button
             variant="outline"
             size="icon"
-            onClick={refresh}
+            onClick={onRefresh}
             disabled={isLoading}
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />

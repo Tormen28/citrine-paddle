@@ -197,7 +197,7 @@ export function ExchangeCard({
                 {globalSpread.toFixed(2)}%
               </div>
               <div className="text-muted-foreground text-xs">
-                {((Number(bestBid.price) - Number(bestAsk.price)) / Number(bestAsk.price) * 100).toFixed(2)}% diferencia
+                {((Number(bestAsk.price) - Number(bestBid.price)) / Number(bestAsk.price) * 100).toFixed(2)}% entre mejor compra y mejor venta
               </div>
             </div>
           </div>
@@ -242,7 +242,7 @@ export function ExchangeCard({
                       {formatPrice(rate.ask)}
                     </div>
                     <div className="text-xs text-muted-foreground">VES</div>
-                    <BrechaValue brecha={brechaFor(rate.bid)} />
+                    <BrechaValue brecha={brechaFor(rate.ask)} />
                     {isBest && (
                       <div className="text-xs text-green-700 font-medium flex items-center gap-1 mt-1">
                         <Check className="h-3 w-3" /> Mejor precio

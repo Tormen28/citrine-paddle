@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useMemo } from "react"
 import { DashboardHeader } from "@/components/ui/dashboard-header"
 import { ExchangeCard } from "@/components/ui/exchange-card"
 import { CandleChart } from "@/components/ui/candle-chart"
@@ -38,13 +38,14 @@ export default function Home() {
     error,
     lastUpdated,
     refresh,
+    spark,
     metrics,
   } = useRates()
 
   const renderSection = () => {
     switch (currentSection) {
       case "overview":
-        return <OverviewSection data={data} isLoading={isLoading} error={error} />
+        return <OverviewSection data={data} spark={spark} isLoading={isLoading} error={error} />
       case "exchanges":
         return (
           <ExchangeCard
@@ -96,6 +97,11 @@ export default function Home() {
       <DashboardHeader
         onSectionChange={setCurrentSection}
         currentSection={currentSection}
+        data={data}
+        isLoading={isLoading}
+        error={error}
+        lastUpdated={lastUpdated}
+        onRefresh={refresh}
       />
 
       {error && data?.rates.length === 0 && (
@@ -146,36 +152,13 @@ function DataRangeSelector({
 
 interface OverviewSectionProps {
   data: ReturnType<typeof useRates>["data"]
+  spark: number[]
   isLoading: boolean
   error: string | null
 }
 
-function OverviewSection({ data, isLoading, error }: OverviewSectionProps) {
+function OverviewSection({ data, spark, isLoading, error }: OverviewSectionProps) {
   const { latest: bcvLatest, isLoading: bcvLoading } = useBcv()
-  const [spark, setSpark] = useState<number[]>([])
-
-  useEffect(() => {
-    let active = true
-    const load = async () => {
-      try {
-        const res = await fetch("/api/history?limit=288&downsample=96")
-        const json = await res.json()
-        if (active && json.success && Array.isArray(json.data)) {
-          setSpark(
-            json.data.map((d: any) => (d.buyPrice + d.sellPrice) / 2)
-          )
-        }
-      } catch {
-        /* sin conexión: se mantiene la última lectura */
-      }
-    }
-    load()
-    const id = setInterval(load, 60000)
-    return () => {
-      active = false
-      clearInterval(id)
-    }
-  }, [])
 
   const sparkStats = useMemo((): { changePct: number; trend: "up" | "down" | "stable" } | null => {
     if (spark.length < 2) return null
@@ -215,6 +198,38 @@ function OverviewSection({ data, isLoading, error }: OverviewSectionProps) {
   const exchangeCount = data?.rates?.length || 0
   const trend: "up" | "down" | "stable" = sparkStats?.trend ?? "stable"
   const changePct = sparkStats?.changePct ?? 0
+
+  const volatility = useMemo(() => {
+    if (spark.length < 3) return 0
+    const mean = spark.reduce((a, b) => a + b, 0) / spark.length
+    const variance = spark.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / spark.length
+    return Math.sqrt(variance) / mean
+  }, [spark])
+
+  const sparkSummary = useMemo(() => {
+    if (spark.length < 2) return null
+    const window = 8
+    const recent = spark.slice(-window)
+    const prev = spark.slice(-window * 2, -window)
+    if (prev.length === 0) return null
+    const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length
+    const prevAvg = prev.reduce((a, b) => a + b, 0) / prev.length
+    const drift = prevAvg > 0 ? ((recentAvg - prevAvg) / prevAvg) * 100 : 0
+    return { drift, recentAvg, prevAvg }
+  }, [spark])
+
+  const brecha = bcvLatest && avgPrice > 0
+    ? ((avgPrice - bcvLatest.usd_ves) / bcvLatest.usd_ves) * 100
+    : null
+
+  const marketSentiment = useMemo(() => {
+    if (!sparkStats || !sparkSummary) return null
+    const { drift } = sparkSummary
+    const momentum = drift >= 0.05 ? "acelerando" : drift <= -0.05 ? "desacelerando" : "sostenido"
+    const direction = trend === "up" ? "al alza" : trend === "down" ? "a la baja" : "lateral"
+    const volLabel = volatility > 0.008 ? "con volatilidad elevada" : volatility > 0.004 ? "con volatilidad moderada" : "con baja volatilidad"
+    return { momentum, direction, volLabel }
+  }, [sparkStats, sparkSummary, trend, volatility])
 
   return (
     <div className="space-y-4">
@@ -261,6 +276,17 @@ function OverviewSection({ data, isLoading, error }: OverviewSectionProps) {
           </div>
         </div>
       </div>
+
+      <MarketSummaryCard
+        trend={trend}
+        changePct={changePct}
+        volatility={volatility}
+        sentiment={marketSentiment}
+        brecha={brecha}
+        bcv={bcvLatest?.usd_ves ?? null}
+        avgPrice={avgPrice}
+        hasData={spark.length >= 2}
+      />
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
@@ -394,6 +420,147 @@ function TrendBadge({ trend, changePct }: { trend: "up" | "down" | "stable"; cha
       {label} · {changePct > 0 ? "+" : ""}
       {changePct.toFixed(2)}% (24h)
     </span>
+  )
+}
+
+type MarketSummaryCardProps = {
+  trend: "up" | "down" | "stable"
+  changePct: number
+  volatility: number
+  sentiment: {
+    momentum: string
+    direction: string
+    volLabel: string
+  } | null
+  brecha: number | null
+  bcv: number | null
+  avgPrice: number
+  hasData: boolean
+}
+
+function MarketSummaryCard({
+  trend,
+  changePct,
+  volatility,
+  sentiment,
+  brecha,
+  bcv,
+  avgPrice,
+  hasData,
+}: MarketSummaryCardProps) {
+  const TrendIcon =
+    trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus
+  const trendColor =
+    trend === "up"
+      ? "text-green-600 dark:text-green-400"
+      : trend === "down"
+      ? "text-red-600 dark:text-red-400"
+      : "text-yellow-600 dark:text-yellow-400"
+
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        {!hasData ? (
+          <div className="flex items-center gap-3 py-2">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground/50" />
+            <p className="text-sm text-muted-foreground">
+              Reuniendo datos para el análisis… vuelve en unos minutos.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${
+                  trend === "up"
+                    ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                    : trend === "down"
+                    ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
+                    : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
+                }`}
+              >
+                <TrendIcon className="h-4 w-4" />
+                {trend === "up" ? "Al alza" : trend === "down" ? "A la baja" : "Lateral"}
+              </span>
+              <span
+                className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+                  sentiment?.momentum === "acelerando"
+                    ? "bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-300"
+                    : sentiment?.momentum === "desacelerando"
+                    ? "bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {sentiment?.momentum === "acelerando"
+                  ? "Acelerando"
+                  : sentiment?.momentum === "desacelerando"
+                  ? "Desacelerando"
+                  : "Sin cambios bruscos"}
+              </span>
+            </div>
+
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              El USDT paralelo se mueve{" "}
+              <span className={`font-semibold ${trendColor}`}>
+                {sentiment?.direction ?? "lateral"}
+              </span>{" "}
+              con{" "}
+              <span className="font-medium text-foreground">
+                {sentiment?.volLabel}
+              </span>
+              {brecha !== null && bcv !== null ? (
+                <>
+                  . Frente al BCV se paga{" "}
+                  <span className="font-semibold text-foreground">
+                    {brecha.toFixed(2)}%
+                  </span>{" "}
+                  más por cada dólar.
+                </>
+              ) : (
+                <>.</>
+              )}
+            </p>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-lg border bg-muted/40 p-3">
+                <p
+                  className={`text-xl font-bold tabular-nums ${
+                    changePct >= 0
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-red-600 dark:text-red-400"
+                  }`}
+                >
+                  {changePct > 0 ? "+" : ""}
+                  {changePct.toFixed(2)}%
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">Cambio 24h</p>
+              </div>
+              <div className="rounded-lg border bg-muted/40 p-3">
+                <p className="text-xl font-bold tabular-nums">
+                  {(volatility * 100).toFixed(2)}%
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">Volatilidad</p>
+              </div>
+              <div className="rounded-lg border bg-muted/40 p-3">
+                <p className="text-xl font-bold tabular-nums">
+                  {avgPrice.toLocaleString("es-VE", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">Precio medio</p>
+              </div>
+              <div className="rounded-lg border bg-muted/40 p-3">
+                <p className="text-xl font-bold tabular-nums">
+                  {brecha !== null ? `${brecha.toFixed(2)}%` : "—"}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">vs. BCV</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 

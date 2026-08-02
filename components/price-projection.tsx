@@ -10,6 +10,7 @@ import { addDays, isValid } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { es } from "date-fns/locale"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { DateRange as DayPickerDateRange } from "react-day-picker"
 
 interface Advertisement {
   price: number
@@ -32,10 +33,7 @@ type PriceBaseType = "min" | "avg" | "max"
 
 export function PriceProjection({ advertisements = [], tradeType, isLoading }: PriceProjectionProps) {
   // Estado para el rango de fechas seleccionado
-  const [dateRange, setDateRange] = useState<{
-    from: Date
-    to: Date
-  }>({
+  const [dateRange, setDateRange] = useState<DayPickerDateRange>({
     from: new Date(),
     to: addDays(new Date(), 7),
   })
@@ -813,7 +811,6 @@ export function PriceProjection({ advertisements = [], tradeType, isLoading }: P
             <DatePickerSimple
               dateRange={dateRange}
               setDateRange={(newRange) => {
-                console.log("PriceProjection: Nuevo rango de fechas seleccionado:", newRange)
                 setDateRange(newRange)
               }}
               locale={es}

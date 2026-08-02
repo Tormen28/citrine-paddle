@@ -40,9 +40,7 @@ export function DatePickerSimple({ className, dateRange, setDateRange, locale = 
   }, [isOpen])
 
   const handleButtonClick = () => {
-    console.log("DatePickerSimple: Botón clickeado")
     setIsOpen(!isOpen)
-    console.log("DatePickerSimple: Estado después de toggle:", !isOpen)
   }
 
   // Formatear el rango de fechas para mostrar
@@ -81,7 +79,6 @@ export function DatePickerSimple({ className, dateRange, setDateRange, locale = 
             defaultMonth={dateRange?.from}
             selected={dateRange}
             onSelect={(range) => {
-              console.log("DatePickerSimple: Selección de fecha:", range)
               if (range) {
                 // Asegurarse de que las fechas tengan horas consistentes para evitar problemas de comparación
                 const normalizedRange = {
@@ -94,7 +91,6 @@ export function DatePickerSimple({ className, dateRange, setDateRange, locale = 
               }
 
               if (range?.to) {
-                console.log("DatePickerSimple: Cerrando después de selección completa")
                 setIsOpen(false)
               }
             }}

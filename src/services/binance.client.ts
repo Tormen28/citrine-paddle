@@ -20,6 +20,7 @@ interface FetchOptions {
   tradeType: TradeType
   minOrders?: number
   minUSDT?: number
+  maxPages?: number
 }
 
 export class BinanceService {
@@ -28,29 +29,36 @@ export class BinanceService {
       tradeType,
       minOrders = DEFAULT_MIN_ORDERS,
       minUSDT = DEFAULT_MIN_USDT_LIQUIDITY,
+      maxPages = 1,
     } = options
 
-    const params = new URLSearchParams({
-      fiat: FIAT,
-      asset: ASSET,
-      tradeType,
-      limit: "20",
-    })
+    const allItems: BinanceAd[] = []
+    for (let page = 1; page <= maxPages; page++) {
+      const params = new URLSearchParams({
+        fiat: FIAT,
+        asset: ASSET,
+        tradeType,
+        limit: "20",
+        page: String(page),
+      })
 
-    const response = await fetch(`${BINANCE_P2P_URL}?${params}`, {
-      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
-      cache: "no-store",
-      signal: AbortSignal.timeout(30000),
-    })
+      const response = await fetch(`${BINANCE_P2P_URL}?${params}`, {
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
+        cache: "no-store",
+        signal: AbortSignal.timeout(30000),
+      })
 
-    if (!response.ok) {
-      throw new Error(`Binance API returned ${response.status}`)
+      if (!response.ok) {
+        throw new Error(`Binance API returned ${response.status}`)
+      }
+
+      const body: BinanceResponse = await response.json()
+      const items = body.data?.items ?? []
+      if (items.length === 0) break
+      allItems.push(...items)
     }
 
-    const body: BinanceResponse = await response.json()
-    const items = body.data?.items ?? []
-
-    const processedAds = this.processAds(items)
+    const processedAds = this.processAds(allItems)
     const uniqueAds = this.removeDuplicates(processedAds)
     const filteredAds = this.filterAds(uniqueAds, minOrders, minUSDT)
 

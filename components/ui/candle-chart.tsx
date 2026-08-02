@@ -96,6 +96,7 @@ export function CandleChart({ className, range }: { className?: string; range: D
       })
       .then((data) => {
         const c = data.candles || []
+        setError(null)
         setCandles((prev) => {
           const z = zoomStateRef.current
           const prevLen = prev.length > 0 ? prev.length : z.total
@@ -233,7 +234,7 @@ export function CandleChart({ className, range }: { className?: string; range: D
     )
   }
 
-  if (error) {
+  if (error && visibleCandles.length === 0) {
     return (
       <Card className={className}>
         <CardHeader>

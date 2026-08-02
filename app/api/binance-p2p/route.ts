@@ -9,8 +9,9 @@ export async function GET(request: Request) {
     const tradeType = searchParams.get("tradeType") || "SELL"
 
     const { env } = getCloudflareContext()
-    const SUPABASE_URL = env.SUPABASE_URL as string
-    const SUPABASE_SECRET_KEY = env.SUPABASE_SECRET_KEY as string
+    const cfEnv = env as Record<string, string | undefined>
+    const SUPABASE_URL = cfEnv.SUPABASE_URL
+    const SUPABASE_SECRET_KEY = cfEnv.SUPABASE_SECRET_KEY
 
     if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
       return NextResponse.json(

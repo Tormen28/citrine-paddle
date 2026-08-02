@@ -44,11 +44,35 @@ interface UseRatesResult {
   lastUpdated: Date | null
   refresh: () => void
   history: RatesResponse[]
+  spark: number[]
   metrics: AlgorithmMetrics
 }
 
 const POLL_INTERVAL = 60000
 const MAX_HISTORY = 20
+const SPARK_KEY = "vesp2p:avg-history"
+const SPARK_MAX = 1440
+
+interface SparkPoint {
+  t: number
+  v: number
+}
+
+function loadSpark(): SparkPoint[] {
+  if (typeof window === "undefined") return []
+  try {
+    const raw = window.localStorage.getItem(SPARK_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as SparkPoint[]
+    const cutoff = Date.now() - 24 * 3600 * 1000
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter(
+      (p) => p && typeof p.t === "number" && typeof p.v === "number" && p.t >= cutoff
+    )
+  } catch {
+    return []
+  }
+}
 
 function calculateMetrics(history: RatesResponse[], currentData: RatesResponse | null): AlgorithmMetrics {
   const prices = history.map(h => h.avgPrice)
@@ -153,6 +177,7 @@ export function useRates(): UseRatesResult {
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [history, setHistory] = useState<RatesResponse[]>([])
+  const [spark, setSpark] = useState<SparkPoint[]>([])
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const fetchHistory = useCallback(async () => {
@@ -193,6 +218,17 @@ export function useRates(): UseRatesResult {
           const newHistory = [...prev, result]
           return newHistory.slice(-MAX_HISTORY)
         })
+        if (typeof result.avgPrice === "number" && result.avgPrice > 0) {
+          setSpark((prev) => {
+            const next = [...prev, { t: Date.now(), v: result.avgPrice }].slice(-SPARK_MAX)
+            try {
+              window.localStorage.setItem(SPARK_KEY, JSON.stringify(next))
+            } catch {
+              /* almacenamiento no disponible */
+            }
+            return next
+          })
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error")
@@ -207,6 +243,7 @@ export function useRates(): UseRatesResult {
   }, [fetchRates])
 
   useEffect(() => {
+    setSpark(loadSpark())
     fetchHistory()
     fetchRates()
 
@@ -228,6 +265,7 @@ export function useRates(): UseRatesResult {
     lastUpdated,
     refresh,
     history,
+    spark: spark.map((p) => p.v),
     metrics,
   }
 }

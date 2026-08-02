@@ -134,12 +134,16 @@ export function TrendChart({ range }: { range: DataRange }) {
 
   const minPrice = useMemo(() => {
     if (chartData.length === 0) return 0
-    return Math.min(...chartData.flatMap((d) => [d.bestBid, d.bestAsk, d.avg]).filter((p) => p > 0)) * 0.998
+    const prices = chartData.flatMap((d) => [d.bestBid, d.bestAsk, d.avg]).filter((p) => p > 0)
+    if (prices.length === 0) return 0
+    return Math.min(...prices) * 0.998
   }, [chartData])
 
   const maxPrice = useMemo(() => {
     if (chartData.length === 0) return 0
-    return Math.max(...chartData.flatMap((d) => [d.bestBid, d.bestAsk, d.avg]).filter((p) => p > 0)) * 1.002
+    const prices = chartData.flatMap((d) => [d.bestBid, d.bestAsk, d.avg]).filter((p) => p > 0)
+    if (prices.length === 0) return 0
+    return Math.max(...prices) * 1.002
   }, [chartData])
 
   const scaleY = useCallback((price: number) => PAD.top + chartH - ((price - minPrice) / (maxPrice - minPrice || 1)) * chartH, [minPrice, maxPrice, chartH])
