@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 
 export const dynamic = "force-dynamic"
 
-const CRIPTOYA_URL = "https://criptoya.com/api/usdt/ves/1"
+const CRIPTOYA_URL = "https://evaxjsxrhmxoiqvmxxma.supabase.co/functions/v1/rates"
 
 interface ExchangeRate {
   name: string
