@@ -117,6 +117,7 @@ export function CurrencyConverter({ avgPrice, bcvRate, brecha }: CurrencyConvert
                       label="USDT a tasa BCV"
                       value={results.usdtBcv}
                       secondary
+                      currency="USDT"
                     />
                     <ResultRow
                       label="USDT a tasa P2P"
@@ -124,6 +125,7 @@ export function CurrencyConverter({ avgPrice, bcvRate, brecha }: CurrencyConvert
                       netValue={results.netP2p}
                       commissionActive={commissionActive}
                       commissionPct={commissionPct}
+                      currency="USDT"
                     />
                   </>
                 ) : (
@@ -133,10 +135,12 @@ export function CurrencyConverter({ avgPrice, bcvRate, brecha }: CurrencyConvert
                       label="VES a tasa BCV"
                       value={results.vesBcv}
                       secondary
+                      currency="VES"
                     />
                     <ResultRow
                       label="VES a tasa P2P"
                       value={results.vesP2p}
+                      currency="VES"
                     />
                   </>
                 )}
@@ -190,6 +194,7 @@ function ResultRow({
   netValue,
   commissionActive,
   commissionPct,
+  currency = "USDT",
 }: {
   label: string
   value: number
@@ -197,6 +202,7 @@ function ResultRow({
   netValue?: number | null
   commissionActive?: boolean
   commissionPct?: number
+  currency?: string
 }) {
   return (
     <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/30">
@@ -208,11 +214,11 @@ function ResultRow({
             secondary ? "text-muted-foreground" : "text-foreground"
           )}
         >
-          {formatNumber(value)} USDT
+          {formatNumber(value)} {currency}
         </span>
         {commissionActive && netValue !== null && netValue !== undefined && (
           <span className="ml-2 text-xs font-medium text-amber-600 dark:text-amber-400">
-            neto {formatNumber(netValue)} USDT
+            neto {formatNumber(netValue)} {currency}
           </span>
         )}
       </div>
