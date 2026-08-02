@@ -416,21 +416,42 @@ export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProp
 
 function calculateRSI(data: number[], period: number): number {
   if (data.length < period + 1) return 50
-  let gains = 0
-  let losses = 0
+
+  // Wilder's smoothed RSI (exponential moving average)
+  let avgGain = 0
+  let avgLoss = 0
+
+  // Seed with simple average of first `period` changes
   for (let i = 1; i <= period; i++) {
     const change = data[i] - data[i - 1]
-    if (change > 0) gains += change
-    else losses -= change
+    if (change > 0) avgGain += change
+    else avgLoss -= change
   }
-  if (losses === 0) return 100
-  const rs = gains / losses
+  avgGain /= period
+  avgLoss /= period
+
+  // Smooth with Wilder's EMA for remaining data
+  for (let i = period + 1; i < data.length; i++) {
+    const change = data[i] - data[i - 1]
+    const gain = change > 0 ? change : 0
+    const loss = change < 0 ? -change : 0
+    avgGain = (avgGain * (period - 1) + gain) / period
+    avgLoss = (avgLoss * (period - 1) + loss) / period
+  }
+
+  if (avgLoss === 0) return 100
+  const rs = avgGain / avgLoss
   return 100 - 100 / (1 + rs)
 }
 
 function calculateMA(data: number[], period: number): number {
   if (data.length < period) return 0
-  const slice = data.slice(-period)
-  const sum = slice.reduce((a, b) => a + b, 0)
-  return sum / period
+
+  // Exponential Moving Average (EMA) — more responsive than SMA
+  const k = 2 / (period + 1)
+  let ema = data.slice(0, period).reduce((a, b) => a + b, 0) / period
+  for (let i = period; i < data.length; i++) {
+    ema = data[i] * k + ema * (1 - k)
+  }
+  return ema
 }

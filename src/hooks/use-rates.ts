@@ -140,9 +140,10 @@ function findArbitrage(rates: ExchangeRate[]): AlgorithmMetrics["arbitrage"] | n
 }
 
 function calculateTrend(prices: number[]): "up" | "down" | "stable" {
-  if (prices.length < 3) return "stable"
+  // Rolling window: last 20 prices for trend detection
+  const recent = prices.slice(-20)
+  if (recent.length < 3) return "stable"
 
-  const recent = prices.slice(-5)
   const first = recent[0]
   const last = recent[recent.length - 1]
   const change = ((last - first) / first) * 100
@@ -153,19 +154,22 @@ function calculateTrend(prices: number[]): "up" | "down" | "stable" {
 }
 
 function calculateTrendStrength(prices: number[]): number {
-  if (prices.length < 3) return 0
+  // Rolling window: last 20 prices
+  const recent = prices.slice(-20)
+  if (recent.length < 3) return 0
 
-  const recent = prices.slice(-5)
   const rises = recent.filter((p, i) => i > 0 && p > recent[i - 1]).length
   return (rises / (recent.length - 1)) * 100
 }
 
 function calculateVolatility(prices: number[]): number {
-  if (prices.length < 3) return 0
+  // Rolling window: use last 100 prices max for current volatility
+  const window = prices.slice(-100)
+  if (window.length < 3) return 0
 
-  const mean = prices.reduce((a, b) => a + b, 0) / prices.length
-  const squaredDiffs = prices.map(p => Math.pow(p - mean, 2))
-  const variance = squaredDiffs.reduce((a, b) => a + b, 0) / prices.length
+  const mean = window.reduce((a, b) => a + b, 0) / window.length
+  const squaredDiffs = window.map(p => Math.pow(p - mean, 2))
+  const variance = squaredDiffs.reduce((a, b) => a + b, 0) / window.length
   const stdDev = Math.sqrt(variance)
 
   return Math.round((stdDev / mean) * 10000) / 100
