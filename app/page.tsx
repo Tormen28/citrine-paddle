@@ -177,7 +177,7 @@ function OverviewSection({ data, isLoading, error }: OverviewSectionProps) {
     }
   }, [])
 
-  const sparkStats = useMemo(() => {
+  const sparkStats = useMemo((): { changePct: number; trend: "up" | "down" | "stable" } | null => {
     if (spark.length < 2) return null
     const first = spark[0]
     const last = spark[spark.length - 1]
@@ -213,7 +213,7 @@ function OverviewSection({ data, isLoading, error }: OverviewSectionProps) {
   const avgPrice = data?.avgPrice || 0
   const globalSpread = data?.globalSpread || 0
   const exchangeCount = data?.rates?.length || 0
-  const trend = sparkStats?.trend ?? "stable"
+  const trend: "up" | "down" | "stable" = sparkStats?.trend ?? "stable"
   const changePct = sparkStats?.changePct ?? 0
 
   return (
