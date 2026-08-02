@@ -10,6 +10,7 @@ import { AlertConfig } from "@/components/ui/alert-config"
 import { AlgorithmPanel } from "@/components/ui/algorithm-panel"
 import { BcvTable } from "@/components/ui/bcv-table"
 import { PriceProjection } from "@/components/price-projection"
+import { CurrencyConverter } from "@/components/ui/currency-converter"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useRates } from "@/hooks/use-rates"
 import { useBcv } from "@/hooks/use-bcv"
@@ -339,6 +340,12 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
           </CardContent>
         </Card>
       </div>
+
+      <CurrencyConverter
+        avgPrice={avgPrice}
+        bcvRate={bcvLatest?.usd_ves ?? 0}
+        brecha={bcvLatest?.brecha ?? null}
+      />
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1">
