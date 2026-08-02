@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import { useMarketSummary, type MarketSummary } from "@/hooks/use-market-summary"
 import { DashboardHeader } from "@/components/ui/dashboard-header"
 import { ExchangeCard } from "@/components/ui/exchange-card"
