@@ -169,6 +169,37 @@ function OverviewSection({ data, spark, isLoading, error }: OverviewSectionProps
     return { changePct, trend }
   }, [spark])
 
+  const trend: "up" | "down" | "stable" = sparkStats?.trend ?? "stable"
+  const changePct = sparkStats?.changePct ?? 0
+
+  const volatility = useMemo(() => {
+    if (spark.length < 3) return 0
+    const mean = spark.reduce((a, b) => a + b, 0) / spark.length
+    const variance = spark.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / spark.length
+    return Math.sqrt(variance) / mean
+  }, [spark])
+
+  const sparkSummary = useMemo(() => {
+    if (spark.length < 2) return null
+    const window = 8
+    const recent = spark.slice(-window)
+    const prev = spark.slice(-window * 2, -window)
+    if (prev.length === 0) return null
+    const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length
+    const prevAvg = prev.reduce((a, b) => a + b, 0) / prev.length
+    const drift = prevAvg > 0 ? ((recentAvg - prevAvg) / prevAvg) * 100 : 0
+    return { drift, recentAvg, prevAvg }
+  }, [spark])
+
+  const marketSentiment = useMemo(() => {
+    if (!sparkStats || !sparkSummary) return null
+    const { drift } = sparkSummary
+    const momentum = drift >= 0.05 ? "acelerando" : drift <= -0.05 ? "desacelerando" : "sostenido"
+    const direction = trend === "up" ? "al alza" : trend === "down" ? "a la baja" : "lateral"
+    const volLabel = volatility > 0.008 ? "con volatilidad elevada" : volatility > 0.004 ? "con volatilidad moderada" : "con baja volatilidad"
+    return { momentum, direction, volLabel }
+  }, [sparkStats, sparkSummary, trend, volatility])
+
   if (isLoading && !data) {
     return (
       <div className="space-y-4">
@@ -196,40 +227,10 @@ function OverviewSection({ data, spark, isLoading, error }: OverviewSectionProps
   const avgPrice = data?.avgPrice || 0
   const globalSpread = data?.globalSpread || 0
   const exchangeCount = data?.rates?.length || 0
-  const trend: "up" | "down" | "stable" = sparkStats?.trend ?? "stable"
-  const changePct = sparkStats?.changePct ?? 0
-
-  const volatility = useMemo(() => {
-    if (spark.length < 3) return 0
-    const mean = spark.reduce((a, b) => a + b, 0) / spark.length
-    const variance = spark.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / spark.length
-    return Math.sqrt(variance) / mean
-  }, [spark])
-
-  const sparkSummary = useMemo(() => {
-    if (spark.length < 2) return null
-    const window = 8
-    const recent = spark.slice(-window)
-    const prev = spark.slice(-window * 2, -window)
-    if (prev.length === 0) return null
-    const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length
-    const prevAvg = prev.reduce((a, b) => a + b, 0) / prev.length
-    const drift = prevAvg > 0 ? ((recentAvg - prevAvg) / prevAvg) * 100 : 0
-    return { drift, recentAvg, prevAvg }
-  }, [spark])
 
   const brecha = bcvLatest && avgPrice > 0
     ? ((avgPrice - bcvLatest.usd_ves) / bcvLatest.usd_ves) * 100
     : null
-
-  const marketSentiment = useMemo(() => {
-    if (!sparkStats || !sparkSummary) return null
-    const { drift } = sparkSummary
-    const momentum = drift >= 0.05 ? "acelerando" : drift <= -0.05 ? "desacelerando" : "sostenido"
-    const direction = trend === "up" ? "al alza" : trend === "down" ? "a la baja" : "lateral"
-    const volLabel = volatility > 0.008 ? "con volatilidad elevada" : volatility > 0.004 ? "con volatilidad moderada" : "con baja volatilidad"
-    return { momentum, direction, volLabel }
-  }, [sparkStats, sparkSummary, trend, volatility])
 
   return (
     <div className="space-y-4">
