@@ -284,7 +284,7 @@ export function CandleChart({ className, range }: { className?: string; range: D
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="flex items-center gap-0.5 p-1 bg-muted/50 rounded-lg w-fit mb-4">
+        <div className="flex items-center gap-0.5 p-1 bg-muted/50 rounded-lg overflow-x-auto mb-4">
           {TIMEFRAMES.map((tf, i) => {
             const isActive = timeframe === tf.value
             const showDivider =

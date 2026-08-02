@@ -104,7 +104,7 @@ export function DashboardHeader({
         </div>
       </div>
 
-      <div className="flex gap-0.5 p-1 bg-muted/50 rounded-xl w-fit">
+      <div className="flex gap-0.5 p-1 bg-muted/50 rounded-xl overflow-x-auto">
         {sections.map((section) => (
           <button
             key={section.id}

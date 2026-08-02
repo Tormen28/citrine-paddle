@@ -163,14 +163,14 @@ export function ExchangeCard({
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t">
             <div className="relative overflow-hidden rounded-xl border bg-green-500/10 border-green-500/30 p-4 transition-transform hover:-translate-y-0.5">
               <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-green-500 to-emerald-400" />
-              <div className="flex items-center gap-1.5 text-green-700 dark:text-green-300 text-[10px] font-semibold uppercase tracking-wider mb-2">
+              <div className="flex items-center gap-1.5 text-green-700 dark:text-green-300 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-2">
                 <ArrowDown className="h-3 w-3" />
                 Mejor para comprar
               </div>
-              <div className="text-green-700 dark:text-green-300 text-2xl font-bold tabular-nums tracking-tight">
+              <div className="text-green-700 dark:text-green-300 text-xl sm:text-2xl font-bold tabular-nums tracking-tight">
                 {formatPrice(bestAsk.price)}
               </div>
-              <div className="text-green-600/70 dark:text-green-400/60 text-[10px] mt-0.5">VES por USDT</div>
+              <div className="text-green-600/70 dark:text-green-400/60 text-[10px] sm:text-xs mt-0.5">VES por USDT</div>
               <div className="text-green-700 dark:text-green-300 text-xs font-medium mt-2 truncate">
                 {formatExchangeName(bestAsk.exchange)}
               </div>
@@ -178,27 +178,27 @@ export function ExchangeCard({
 
             <div className="relative overflow-hidden rounded-xl border bg-red-500/10 border-red-500/30 p-4 transition-transform hover:-translate-y-0.5">
               <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-red-500 to-rose-400" />
-              <div className="flex items-center gap-1.5 text-red-700 dark:text-red-300 text-[10px] font-semibold uppercase tracking-wider mb-2">
+              <div className="flex items-center gap-1.5 text-red-700 dark:text-red-300 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-2">
                 <ArrowUp className="h-3 w-3" />
                 Mejor para vender
               </div>
-              <div className="text-red-700 dark:text-red-300 text-2xl font-bold tabular-nums tracking-tight">
+              <div className="text-red-700 dark:text-red-300 text-xl sm:text-2xl font-bold tabular-nums tracking-tight">
                 {formatPrice(bestBid.price)}
               </div>
-              <div className="text-red-600/70 dark:text-red-400/60 text-[10px] mt-0.5">VES por USDT</div>
+              <div className="text-red-600/70 dark:text-red-400/60 text-[10px] sm:text-xs mt-0.5">VES por USDT</div>
               <div className="text-red-700 dark:text-red-300 text-xs font-medium mt-2 truncate">
                 {formatExchangeName(bestBid.exchange)}
               </div>
             </div>
 
             <div className="relative overflow-hidden rounded-xl border bg-muted/30 p-4 col-span-2 sm:col-span-1 transition-transform hover:-translate-y-0.5">
-              <div className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider mb-2">
+              <div className="text-muted-foreground text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-2">
                 Spread global
               </div>
-              <div className="text-foreground text-2xl font-bold tabular-nums tracking-tight">
+              <div className="text-foreground text-xl sm:text-2xl font-bold tabular-nums tracking-tight">
                 {globalSpread.toFixed(2)}%
               </div>
-              <div className="text-muted-foreground text-[10px] mt-2">
+              <div className="text-muted-foreground text-[10px] sm:text-xs mt-2">
                 {((Number(bestAsk.price) - Number(bestBid.price)) / Number(bestAsk.price) * 100).toFixed(2)}% entre mejor compra y mejor venta
               </div>
             </div>

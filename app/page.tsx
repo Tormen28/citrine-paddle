@@ -201,13 +201,13 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
             <p className="text-sm font-medium text-muted-foreground">
               Dólar paralelo hoy
             </p>
-            <div className="mt-1 flex items-center gap-3">
-              <span className="text-4xl font-bold tabular-nums tracking-tight sm:text-5xl">
+            <div className="mt-1 flex items-center gap-3 min-w-0">
+              <span className="text-3xl font-bold tabular-nums tracking-tight sm:text-4xl lg:text-5xl truncate">
                 {avgPrice.toLocaleString("es-VE", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
-                <span className="ml-2 text-lg font-medium text-muted-foreground">
+                <span className="ml-2 text-base sm:text-lg font-medium text-muted-foreground">
                   VES
                 </span>
               </span>
