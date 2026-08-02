@@ -19,14 +19,14 @@ interface Candle {
 }
 
 const TIMEFRAMES = [
-  { label: "5m", value: "5m" },
-  { label: "10m", value: "10m" },
-  { label: "15m", value: "15m" },
-  { label: "30m", value: "30m" },
-  { label: "1h", value: "1h" },
-  { label: "4h", value: "4h" },
-  { label: "8h", value: "8h" },
-  { label: "24h", value: "24h" },
+  { label: "5m", value: "5m", group: "short" as const },
+  { label: "10m", value: "10m", group: "short" as const },
+  { label: "15m", value: "15m", group: "short" as const },
+  { label: "30m", value: "30m", group: "short" as const },
+  { label: "1h", value: "1h", group: "medium" as const },
+  { label: "4h", value: "4h", group: "medium" as const },
+  { label: "8h", value: "8h", group: "long" as const },
+  { label: "24h", value: "24h", group: "long" as const },
 ]
 
 function formatTime(timestamp: string, tf: string): string {
@@ -223,13 +223,13 @@ export function CandleChart({ className, range }: { className?: string; range: D
   if (isLoading && visibleCandles.length === 0) {
     return (
       <Card className={className}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ChartCandlestick className="h-5 w-5" />
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ChartCandlestick className="h-4 w-4 text-muted-foreground" />
             Velas Japonesas
           </CardTitle>
         </CardHeader>
-        <CardContent><Skeleton className="h-[350px] w-full" /></CardContent>
+        <CardContent className="pt-0"><Skeleton className="h-[350px] w-full rounded-xl" /></CardContent>
       </Card>
     )
   }
@@ -237,14 +237,14 @@ export function CandleChart({ className, range }: { className?: string; range: D
   if (error && visibleCandles.length === 0) {
     return (
       <Card className={className}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ChartCandlestick className="h-5 w-5" />
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ChartCandlestick className="h-4 w-4 text-muted-foreground" />
             Velas Japonesas
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="h-[350px] flex items-center justify-center text-red-500">Error: {error}</div>
+        <CardContent className="pt-0">
+          <div className="h-[350px] flex items-center justify-center text-sm text-red-500">Error: {error}</div>
         </CardContent>
       </Card>
     )
@@ -252,24 +252,30 @@ export function CandleChart({ className, range }: { className?: string; range: D
 
   return (
     <Card className={className}>
-      <CardHeader>
+      <CardHeader className="pb-2">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <ChartCandlestick className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ChartCandlestick className="h-4 w-4 text-muted-foreground" />
               Velas Japonesas
             </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              {visibleCandles.length} de {candles.length} velas - {timeframe}
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {visibleCandles.length} de {candles.length} velas · {timeframe}
             </p>
           </div>
           {latest && (
             <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold">
-                {latest.close.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} VES
+              <span className="text-xl font-bold tabular-nums tracking-tight">
+                {latest.close.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <span className="ml-1.5 text-sm font-medium text-muted-foreground">VES</span>
               </span>
               {change !== null && (
-                <span className={cn("text-sm font-medium px-2 py-0.5 rounded", change >= 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>
+                <span className={cn(
+                  "text-xs font-semibold px-2 py-0.5 rounded-full",
+                  change >= 0
+                    ? "bg-green-500/15 text-green-700 dark:text-green-300"
+                    : "bg-red-500/15 text-red-700 dark:text-red-300"
+                )}>
                   {change >= 0 ? "+" : ""}{change.toFixed(2)}%
                 </span>
               )}
@@ -277,22 +283,29 @@ export function CandleChart({ className, range }: { className?: string; range: D
           )}
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="flex gap-1 mb-3 flex-wrap">
-          {TIMEFRAMES.map((tf) => (
-            <button
-              key={tf.value}
-              onClick={() => setTimeframe(tf.value)}
-              className={cn(
-                "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
-                timeframe === tf.value
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              )}
-            >
-              {tf.label}
-            </button>
-          ))}
+      <CardContent className="pt-0">
+        <div className="flex items-center gap-0.5 p-1 bg-muted/50 rounded-lg w-fit mb-4">
+          {TIMEFRAMES.map((tf, i) => {
+            const isActive = timeframe === tf.value
+            const showDivider =
+              (i > 0 && tf.group !== TIMEFRAMES[i - 1].group)
+            return (
+              <span key={tf.value} className="flex items-center">
+                {showDivider && <span className="w-px h-4 bg-border mx-1" />}
+                <button
+                  onClick={() => setTimeframe(tf.value)}
+                  className={cn(
+                    "relative px-2.5 py-1.5 text-xs font-medium rounded-md transition-all duration-200",
+                    isActive
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  )}
+                >
+                  {tf.label}
+                </button>
+              </span>
+            )
+          })}
         </div>
 
         {visibleCandles.length === 0 ? (
@@ -302,7 +315,7 @@ export function CandleChart({ className, range }: { className?: string; range: D
         ) : (
           <div
             ref={containerRef}
-            className="relative rounded-lg border bg-card overflow-hidden"
+            className="relative rounded-xl border bg-card/50 overflow-hidden shadow-inner"
             style={{ cursor: isDraggingState ? "grabbing" : "crosshair" }}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
@@ -363,24 +376,24 @@ export function CandleChart({ className, range }: { className?: string; range: D
 
             {hoverIdx !== null && hoverIdx < visibleCandles.length && (
               <div
-                className="absolute z-50 pointer-events-none bg-popover/95 border rounded-lg p-3 shadow-xl text-xs backdrop-blur-sm"
+                className="absolute z-50 pointer-events-none bg-popover/95 border rounded-xl p-3 shadow-2xl text-xs backdrop-blur-md"
                 style={{
                   left: Math.min(mousePos.x + 15, (containerRef.current?.clientWidth ?? W) - 180),
                   top: Math.max(mousePos.y - 120, 10),
                 }}
               >
-                <div className="text-muted-foreground mb-1.5 text-[10px]">
+                <div className="text-muted-foreground mb-2 text-[10px] font-medium">
                   {formatDate(visibleCandles[hoverIdx].time)}
                 </div>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
-                  <span className="text-muted-foreground">O</span>
-                  <span className="font-mono text-right">{visibleCandles[hoverIdx].open.toFixed(2)}</span>
-                  <span className="text-muted-foreground">H</span>
-                  <span className="font-mono text-right text-green-500">{visibleCandles[hoverIdx].high.toFixed(2)}</span>
-                  <span className="text-muted-foreground">L</span>
-                  <span className="font-mono text-right text-red-500">{visibleCandles[hoverIdx].low.toFixed(2)}</span>
-                  <span className="text-muted-foreground">C</span>
-                  <span className={cn("font-mono text-right font-bold", visibleCandles[hoverIdx].close >= visibleCandles[hoverIdx].open ? "text-green-500" : "text-red-500")}>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                  <span className="text-muted-foreground">Open</span>
+                  <span className="font-mono text-right tabular-nums">{visibleCandles[hoverIdx].open.toFixed(2)}</span>
+                  <span className="text-muted-foreground">High</span>
+                  <span className="font-mono text-right tabular-nums text-green-500 font-medium">{visibleCandles[hoverIdx].high.toFixed(2)}</span>
+                  <span className="text-muted-foreground">Low</span>
+                  <span className="font-mono text-right tabular-nums text-red-500 font-medium">{visibleCandles[hoverIdx].low.toFixed(2)}</span>
+                  <span className="text-muted-foreground">Close</span>
+                  <span className={cn("font-mono text-right tabular-nums font-bold", visibleCandles[hoverIdx].close >= visibleCandles[hoverIdx].open ? "text-green-500" : "text-red-500")}>
                     {visibleCandles[hoverIdx].close.toFixed(2)}
                   </span>
                 </div>
@@ -392,15 +405,15 @@ export function CandleChart({ className, range }: { className?: string; range: D
         <div className="flex items-center justify-between gap-2 mt-3 text-xs text-muted-foreground px-1">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-sm bg-green-500" />
+              <div className="w-2.5 h-2.5 rounded-sm bg-green-500 shadow-sm shadow-green-500/30" />
               <span>Alcista</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-sm bg-red-500" />
+              <div className="w-2.5 h-2.5 rounded-sm bg-red-500 shadow-sm shadow-red-500/30" />
               <span>Bajista</span>
             </div>
           </div>
-          <span className="text-[10px] text-muted-foreground/70">
+          <span className="text-[10px] text-muted-foreground/60">
             Rueda para zoom · Arrastra para navegar
           </span>
         </div>
