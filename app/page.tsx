@@ -108,13 +108,13 @@ export default function Home() {
       />
 
       {error && data?.rates.length === 0 && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="rounded-xl">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription className="flex flex-col gap-2">
-            <span>{error}</span>
+          <AlertDescription className="flex items-center justify-between gap-2">
+            <span className="text-xs">{error}</span>
             <button
               onClick={refresh}
-              className="self-start text-sm underline"
+              className="text-xs font-medium underline shrink-0"
             >
               Reintentar
             </button>

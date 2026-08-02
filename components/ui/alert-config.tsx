@@ -86,25 +86,25 @@ export function AlertConfig({ currentSpread, currentPrice }: AlertConfigProps) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-base">
           {notificationsEnabled ? (
-            <Bell className="h-5 w-5" />
+            <Bell className="h-4 w-4 text-muted-foreground" />
           ) : (
-            <BellOff className="h-5 w-5" />
+            <BellOff className="h-4 w-4 text-muted-foreground" />
           )}
-          Configuración de Alertas
+          Configuracion de Alertas
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs">
           Configura los umbrales para recibir notificaciones cuando el mercado cambie
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-6">
-        <div className="flex items-center justify-between">
+      <CardContent className="space-y-5 pt-0">
+        <div className="flex items-center justify-between p-3 rounded-xl border bg-muted/30">
           <div className="space-y-0.5">
-            <Label htmlFor="notifications">Notificaciones del navegador</Label>
-            <p className="text-sm text-muted-foreground">
+            <Label htmlFor="notifications" className="text-sm font-medium">Notificaciones del navegador</Label>
+            <p className="text-[10px] text-muted-foreground">
               Recibir alertas cuando se cumplan las condiciones
             </p>
           </div>
@@ -115,9 +115,9 @@ export function AlertConfig({ currentSpread, currentPrice }: AlertConfigProps) {
           />
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="space-y-2">
-            <Label htmlFor="minSpread">Spread mínimo (%)</Label>
+            <Label htmlFor="minSpread" className="text-xs font-medium">Spread minimo (%)</Label>
             <Input
               id="minSpread"
               type="number"
@@ -131,14 +131,15 @@ export function AlertConfig({ currentSpread, currentPrice }: AlertConfigProps) {
                   minSpread: parseFloat(e.target.value) || 0,
                 })
               }
+              className="h-9"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] text-muted-foreground">
               Alertar cuando el spread global baje de este valor
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="maxSpread">Spread máximo (%)</Label>
+            <Label htmlFor="maxSpread" className="text-xs font-medium">Spread maximo (%)</Label>
             <Input
               id="maxSpread"
               type="number"
@@ -152,14 +153,15 @@ export function AlertConfig({ currentSpread, currentPrice }: AlertConfigProps) {
                   maxSpread: parseFloat(e.target.value) || 0,
                 })
               }
+              className="h-9"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] text-muted-foreground">
               Alertar cuando el spread global suba de este valor
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="priceChange">Cambio de precio (%)</Label>
+            <Label htmlFor="priceChange" className="text-xs font-medium">Cambio de precio (%)</Label>
             <Input
               id="priceChange"
               type="number"
@@ -173,52 +175,44 @@ export function AlertConfig({ currentSpread, currentPrice }: AlertConfigProps) {
                   priceChangePercent: parseFloat(e.target.value) || 0,
                 })
               }
+              className="h-9"
             />
-            <p className="text-xs text-muted-foreground">
-              Alertar cuando el precio cambie más de este porcentaje en el período
+            <p className="text-[10px] text-muted-foreground">
+              Alertar cuando el precio cambie mas de este porcentaje
             </p>
           </div>
         </div>
 
         {currentSpread !== undefined && (
-          <div className="p-4 bg-muted rounded-lg">
-            <div className="text-sm text-muted-foreground">Valores actuales:</div>
-            <div className="flex gap-4 mt-2">
+          <div className="rounded-xl border bg-gradient-to-b from-card to-muted/20 p-4">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">Valores actuales</div>
+            <div className="flex gap-6">
               <div>
-                <span className="text-2xl font-bold">{currentSpread.toFixed(2)}%</span>
-                <span className="text-sm text-muted-foreground ml-1">Spread actual</span>
+                <span className="text-xl font-bold tabular-nums">{currentSpread.toFixed(2)}%</span>
+                <span className="text-[10px] text-muted-foreground ml-1.5">Spread</span>
               </div>
               {currentPrice && (
                 <div>
-                  <span className="text-2xl font-bold">
+                  <span className="text-xl font-bold tabular-nums">
                     {currentPrice.toLocaleString("es-VE", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
                   </span>
-                  <span className="text-sm text-muted-foreground ml-1">VES/USDT</span>
+                  <span className="text-[10px] text-muted-foreground ml-1.5">VES/USDT</span>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        <div className="flex gap-3">
-          <Button onClick={handleSave} className="flex-1">
-            {saved ? (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Guardado
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Guardar Configuración
-              </>
-            )}
+        <div className="flex gap-2">
+          <Button onClick={handleSave} className="flex-1 h-9" size="sm">
+            <Save className="h-3.5 w-3.5 mr-2" />
+            {saved ? "Guardado" : "Guardar Configuracion"}
           </Button>
-          <Button variant="outline" onClick={handleReset}>
-            <RotateCcw className="h-4 w-4" />
+          <Button variant="outline" onClick={handleReset} size="sm" className="h-9">
+            <RotateCcw className="h-3.5 w-3.5" />
           </Button>
         </div>
       </CardContent>

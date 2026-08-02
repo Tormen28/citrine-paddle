@@ -61,40 +61,42 @@ export function DashboardHeader({
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard USDT/VES</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-xl font-bold tracking-tight">Dashboard USDT/VES</h1>
+          <p className="text-xs text-muted-foreground">
             {isLoading && !data
               ? "Cargando..."
               : error && !data
               ? `Error: ${error}`
-              : `${relativeTime} • ${data?.rates.length || 0} exchanges`}
+              : `${relativeTime} · ${data?.rates.length || 0} exchanges`}
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Button
             variant="outline"
             size="icon"
+            className="h-8 w-8"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           >
-            <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <Sun className="h-3.5 w-3.5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-3.5 w-3.5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
           </Button>
 
           <Button
             variant="outline"
             size="icon"
+            className="h-8 w-8"
             onClick={onRefresh}
             disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
           </Button>
 
           {alertCount > 0 && (
-            <Button variant="outline" size="icon" className="relative">
-              <Bell className="h-4 w-4" />
-              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] font-medium text-white flex items-center justify-center">
+            <Button variant="outline" size="icon" className="h-8 w-8 relative">
+              <Bell className="h-3.5 w-3.5" />
+              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center shadow-sm shadow-red-500/30">
                 {alertCount}
               </span>
             </Button>
@@ -102,15 +104,15 @@ export function DashboardHeader({
         </div>
       </div>
 
-      <div className="flex gap-1 p-1 bg-muted rounded-lg overflow-x-auto">
+      <div className="flex gap-0.5 p-1 bg-muted/50 rounded-xl w-fit">
         {sections.map((section) => (
           <button
             key={section.id}
             onClick={() => onSectionChange(section.id)}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+            className={`relative px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap ${
               currentSection === section.id
                 ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
           >
             {section.label}
