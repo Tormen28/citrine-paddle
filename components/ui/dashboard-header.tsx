@@ -8,7 +8,7 @@ import { AlertCircle, RefreshCw, Bell, Sun, Moon } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useRates } from "@/hooks/use-rates"
 
-type Section = "overview" | "exchanges" | "trends" | "config"
+type Section = "overview" | "exchanges" | "analisis" | "config"
 
 interface DashboardHeaderProps {
   onSectionChange: (section: Section) => void
@@ -44,7 +44,7 @@ export function DashboardHeader({
   const sections: { id: Section; label: string }[] = [
     { id: "overview", label: "Resumen" },
     { id: "exchanges", label: "Exchanges" },
-    { id: "trends", label: "Tendencias" },
+    { id: "analisis", label: "Análisis" },
     { id: "config", label: "Config" },
   ]
 

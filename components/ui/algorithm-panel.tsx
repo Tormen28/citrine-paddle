@@ -18,6 +18,7 @@ import {
   AlertTriangle,
 } from "lucide-react"
 import type { AlgorithmMetrics } from "@/hooks/use-rates"
+import type { DataRange } from "@/lib/data-range"
 
 interface Candle {
   time: number
@@ -40,6 +41,7 @@ interface HistoryStats {
 interface AlgorithmPanelProps {
   metrics: AlgorithmMetrics
   isLoading: boolean
+  range: DataRange
 }
 
 function formatExchangeName(name: string): string {
@@ -63,7 +65,7 @@ function formatPrice(price: number): string {
   })
 }
 
-export function AlgorithmPanel({ metrics, isLoading }: AlgorithmPanelProps) {
+export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProps) {
   const [analysis, setAnalysis] = useState({
     rsi: 50,
     ma5: 0,
@@ -82,7 +84,7 @@ export function AlgorithmPanel({ metrics, isLoading }: AlgorithmPanelProps) {
       controller.abort()
       controller = new AbortController()
 
-      fetch("/api/candles?timeframe=1h&limit=8000", { signal: controller.signal })
+      fetch(`/api/candles?timeframe=1h&limit=${range.limit ?? 50000}`, { signal: controller.signal })
         .then((res) => {
           if (!res.ok) throw new Error(`HTTP ${res.status}`)
           return res.json()
@@ -111,7 +113,7 @@ export function AlgorithmPanel({ metrics, isLoading }: AlgorithmPanelProps) {
     fetchData()
     const interval = setInterval(fetchData, 60000)
     return () => { controller.abort(); clearInterval(interval) }
-  }, [])
+  }, [range])
 
   // Fetch historical data stats (auto-refresh every 60s)
   useEffect(() => {
@@ -121,7 +123,9 @@ export function AlgorithmPanel({ metrics, isLoading }: AlgorithmPanelProps) {
       controller.abort()
       controller = new AbortController()
 
-      fetch("/api/history?limit=8000", { signal: controller.signal })
+      const limit = range.limit ?? 50000
+      const url = `/api/history?limit=${limit}${range.limit === null || range.limit > 8000 ? "&downsample=2000" : ""}`
+      fetch(url, { signal: controller.signal })
         .then((res) => {
           if (!res.ok) throw new Error(`HTTP ${res.status}`)
           return res.json()
@@ -171,7 +175,7 @@ export function AlgorithmPanel({ metrics, isLoading }: AlgorithmPanelProps) {
     fetchData()
     const interval = setInterval(fetchData, 60000)
     return () => { controller.abort(); clearInterval(interval) }
-  }, [])
+  }, [range])
 
   if (isLoading && !metrics) {
     return (

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ChartCandlestick } from "lucide-react"
 import { cn } from "@/lib/utils"
+import type { DataRange } from "@/lib/data-range"
 
 const GREEN = "#22c55e"
 const RED = "#ef4444"
@@ -41,7 +42,7 @@ function formatDate(timestamp: string): string {
   return d.toLocaleDateString("es-VE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
 }
 
-export function CandleChart({ className }: { className?: string }) {
+export function CandleChart({ className, range }: { className?: string; range: DataRange }) {
   const [timeframe, setTimeframe] = useState("1h")
   const [candles, setCandles] = useState<Candle[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -87,7 +88,8 @@ export function CandleChart({ className }: { className?: string }) {
 
   const fetchCandles = useCallback(() => {
     const controller = new AbortController()
-    fetch(`/api/candles?timeframe=${timeframe}&limit=8000`, { signal: controller.signal })
+    const limit = range.limit ?? 50000
+    fetch(`/api/candles?timeframe=${timeframe}&limit=${limit}`, { signal: controller.signal })
       .then((res) => {
         if (!res.ok) throw new Error("Error cargando velas")
         return res.json()
@@ -95,10 +97,12 @@ export function CandleChart({ className }: { className?: string }) {
       .then((data) => {
         const c = data.candles || []
         setCandles((prev) => {
-          if (prev.length > 0) {
-            const ratio = viewEnd - viewStart > 0 ? (viewEnd - viewStart) / prev.length : 1
+          const z = zoomStateRef.current
+          const prevLen = prev.length > 0 ? prev.length : z.total
+          if (prevLen > 0) {
+            const ratio = z.viewEnd - z.viewStart > 0 ? (z.viewEnd - z.viewStart) / prevLen : 1
             const newViewLen = Math.max(5, Math.round(ratio * c.length))
-            const newStart = Math.max(0, Math.round((viewStart / prev.length) * c.length))
+            const newStart = Math.max(0, Math.round((z.viewStart / prevLen) * c.length))
             setViewStart(newStart)
             setViewEnd(Math.min(c.length, newStart + newViewLen))
           } else {
@@ -116,7 +120,7 @@ export function CandleChart({ className }: { className?: string }) {
         }
       })
     return controller
-  }, [timeframe, viewStart, viewEnd])
+  }, [timeframe, range])
 
   useEffect(() => {
     setIsLoading(true)

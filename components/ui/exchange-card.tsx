@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton"
 import { AlertCircle, RefreshCw, TrendingUp, ArrowUp, ArrowDown, Check } from "lucide-react"
 import type { ExchangeRate } from "@/hooks/use-rates"
+import { useBcv } from "@/hooks/use-bcv"
 
 interface ExchangeCardProps {
   rates: ExchangeRate[]
@@ -38,6 +39,24 @@ function formatExchangeName(name: string): string {
   return names[name] || name
 }
 
+function BrechaValue({ brecha }: { brecha: number | null }) {
+  if (brecha === null) {
+    return <span className="text-xs text-muted-foreground">—</span>
+  }
+  const color =
+    brecha < 0
+      ? "text-green-500"
+      : brecha > 0
+      ? "text-red-500"
+      : "text-muted-foreground"
+  return (
+    <span className={`text-xs font-medium ${color}`}>
+      {brecha > 0 ? "+" : ""}
+      {brecha.toFixed(2)}%
+    </span>
+  )
+}
+
 export function ExchangeCard({
   rates,
   bestBid,
@@ -49,6 +68,11 @@ export function ExchangeCard({
   lastUpdated,
   onRefresh,
 }: ExchangeCardProps) {
+  const { latest: bcvLatest } = useBcv()
+  const bcvPrice = bcvLatest?.usd_ves
+  const brechaFor = (price: number): number | null =>
+    bcvPrice ? ((price - bcvPrice) / bcvPrice) * 100 : null
+
   if (isLoading && rates.length === 0) {
     return (
       <Card>
@@ -115,6 +139,11 @@ export function ExchangeCard({
             </CardTitle>
             <CardDescription>
               Compara precios para comprar y vender USDT
+              {bcvLatest && (
+                <span className="block text-xs">
+                  Tasa BCV: {formatPrice(bcvLatest.usd_ves)} VES
+                </span>
+              )}
             </CardDescription>
           </div>
 
@@ -177,8 +206,9 @@ export function ExchangeCard({
 
       <CardContent className="space-y-6">
         <div>
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium">🏆 Ranking para Comprar USDT</span>
+            <span className="text-xs text-muted-foreground">Brecha vs BCV</span>
           </div>
           <div className="space-y-2">
             {sortedByBestBuy.slice(0, 5).map((rate, index) => {
@@ -212,6 +242,7 @@ export function ExchangeCard({
                       {formatPrice(rate.ask)}
                     </div>
                     <div className="text-xs text-muted-foreground">VES</div>
+                    <BrechaValue brecha={brechaFor(rate.bid)} />
                     {isBest && (
                       <div className="text-xs text-green-700 font-medium flex items-center gap-1 mt-1">
                         <Check className="h-3 w-3" /> Mejor precio
@@ -225,8 +256,9 @@ export function ExchangeCard({
         </div>
 
         <div>
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium">🏆 Ranking para Vender USDT</span>
+            <span className="text-xs text-muted-foreground">Brecha vs BCV</span>
           </div>
           <div className="space-y-2">
             {sortedByBestSell.slice(0, 5).map((rate, index) => {
@@ -260,6 +292,7 @@ export function ExchangeCard({
                       {formatPrice(rate.bid)}
                     </div>
                     <div className="text-xs text-muted-foreground">VES</div>
+                    <BrechaValue brecha={brechaFor(rate.bid)} />
                     {isBest && (
                       <div className="text-xs text-red-700 font-medium flex items-center gap-1 mt-1">
                         <Check className="h-3 w-3" /> Mejor precio

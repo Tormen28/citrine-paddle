@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TrendingUp } from "lucide-react"
+import type { DataRange } from "@/lib/data-range"
 
 interface SnapshotRow {
   time: number
@@ -29,7 +30,7 @@ function formatTooltipTime(epoch: number): string {
   return d.toLocaleDateString("es-VE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
 }
 
-export function TrendChart() {
+export function TrendChart({ range }: { range: DataRange }) {
   const [history, setHistory] = useState<SnapshotRow[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -42,19 +43,24 @@ export function TrendChart() {
   const containerRef = useRef<HTMLDivElement>(null)
   const isDragging = useRef(false)
   const lastMouseX = useRef(0)
+  const zoomStateRef = useRef({ viewStart: 0, viewEnd: 0, total: 0 })
 
   const fetchData = useCallback(() => {
     const controller = new AbortController()
-    fetch("/api/history?limit=8000", { signal: controller.signal })
+    const limit = range.limit ?? 50000
+    const url = `/api/history?limit=${limit}${range.limit === null || range.limit > 8000 ? "&downsample=2000" : ""}`
+    fetch(url, { signal: controller.signal })
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.data) {
           setHistory((prev) => {
-            if (prev.length > 0) {
-              const ratio = viewEnd - viewStart > 0 ? (viewEnd - viewStart) / prev.length : 1
+            const z = zoomStateRef.current
+            const prevLen = prev.length > 0 ? prev.length : z.total
+            if (prevLen > 0) {
+              const ratio = z.viewEnd - z.viewStart > 0 ? (z.viewEnd - z.viewStart) / prevLen : 1
               const newLen = data.data.length
               const newViewLen = Math.max(5, Math.round(ratio * newLen))
-              const newStart = Math.max(0, Math.round((viewStart / prev.length) * newLen))
+              const newStart = Math.max(0, Math.round((z.viewStart / prevLen) * newLen))
               setViewStart(newStart)
               setViewEnd(Math.min(newLen, newStart + newViewLen))
             } else {
@@ -74,7 +80,7 @@ export function TrendChart() {
         }
       })
     return controller
-  }, [viewStart, viewEnd])
+  }, [range])
 
   useEffect(() => {
     const controller = fetchData()
@@ -98,8 +104,6 @@ export function TrendChart() {
   const PAD = { top: 25, right: 20, bottom: 40, left: 65 }
   const chartW = W - PAD.left - PAD.right
   const chartH = H - PAD.top - PAD.bottom
-
-  const zoomStateRef = useRef({ viewStart: 0, viewEnd: 0, total: 0 })
 
   useEffect(() => {
     zoomStateRef.current.viewStart = viewStart
