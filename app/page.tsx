@@ -51,25 +51,21 @@ export default function Home() {
         return <OverviewSection data={data} spark={spark} avgPrice={data?.avgPrice || 0} summary={summary} isLoading={isLoading} error={error} />
       case "exchanges":
         return (
-          <div className="space-y-4">
-            <MarketSummaryCard summary={summary} avgPrice={data?.avgPrice || 0} />
-            <ExchangeCard
-              rates={data?.rates || []}
-              bestBid={data?.bestBid || null}
-              bestAsk={data?.bestAsk || null}
-              globalSpread={data?.globalSpread || 0}
-              avgPrice={data?.avgPrice || 0}
-              isLoading={isLoading}
-              error={error}
-              lastUpdated={lastUpdated}
-              onRefresh={refresh}
-            />
-          </div>
+          <ExchangeCard
+            rates={data?.rates || []}
+            bestBid={data?.bestBid || null}
+            bestAsk={data?.bestAsk || null}
+            globalSpread={data?.globalSpread || 0}
+            avgPrice={data?.avgPrice || 0}
+            isLoading={isLoading}
+            error={error}
+            lastUpdated={lastUpdated}
+            onRefresh={refresh}
+          />
         )
       case "analisis":
         return (
           <div className="space-y-6">
-            <MarketSummaryCard summary={summary} avgPrice={data?.avgPrice || 0} />
             <DataRangeSelector range={range} onRangeChange={setRange} />
             <TrendChart range={range} />
             <CandleChart range={range} />
