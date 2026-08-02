@@ -249,66 +249,80 @@ export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProp
       </CardHeader>
 
       <CardContent className="space-y-4 pt-0">
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-          {metricCard(
-            <TrendingUp className="h-3.5 w-3.5" />,
-            "Tendencia",
-            trendLabel,
-            trendColor,
-            `${metrics.trendStrength.toFixed(0)}% senales positivas`
-          )}
-          {metricCard(
-            <BarChart3 className="h-3.5 w-3.5" />,
-            "Volatilidad",
-            `${metrics.volatility.toFixed(2)}%`,
-            metrics.volatility > 3 ? "text-red-600 dark:text-red-400" : metrics.volatility > 1 ? "text-yellow-600 dark:text-yellow-400" : "text-green-600 dark:text-green-400",
-            metrics.volatility > 3 ? "Alta" : metrics.volatility > 1 ? "Media" : "Baja"
-          )}
-          {metricCard(
-            <Clock className="h-3.5 w-3.5" />,
-            "Promedio (MA5)",
-            metrics.movingAverage > 0 ? formatPrice(metrics.movingAverage) : "--",
-            "text-foreground",
-            "VES/USDT"
-          )}
-          {metricCard(
-            <Activity className="h-3.5 w-3.5" />,
-            "Cambio",
-            metrics.priceChange !== 0 ? `${metrics.priceChange > 0 ? "+" : ""}${metrics.priceChangePercent.toFixed(2)}%` : "--",
-            metrics.priceChange > 0 ? "text-green-600 dark:text-green-400" : metrics.priceChange < 0 ? "text-red-600 dark:text-red-400" : "text-foreground",
-            "vs lectura anterior"
-          )}
+        {/* ─── Corto plazo · 5 min ─── */}
+        <div>
+          <div className="flex items-center gap-2 mb-2.5">
+            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Corto plazo · 5 min</span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            {metricCard(
+              <TrendingUp className="h-3.5 w-3.5" />,
+              "Tendencia",
+              trendLabel,
+              trendColor,
+              `${metrics.trendStrength.toFixed(0)}% senales positivas`
+            )}
+            {metricCard(
+              <BarChart3 className="h-3.5 w-3.5" />,
+              "Volatilidad",
+              `${metrics.volatility.toFixed(2)}%`,
+              metrics.volatility > 3 ? "text-red-600 dark:text-red-400" : metrics.volatility > 1 ? "text-yellow-600 dark:text-yellow-400" : "text-green-600 dark:text-green-400",
+              metrics.volatility > 3 ? "Alta" : metrics.volatility > 1 ? "Media" : "Baja"
+            )}
+            {metricCard(
+              <Clock className="h-3.5 w-3.5" />,
+              "Promedio (MA)",
+              metrics.movingAverage > 0 ? formatPrice(metrics.movingAverage) : "--",
+              "text-foreground",
+              "VES/USDT"
+            )}
+            {metricCard(
+              <Activity className="h-3.5 w-3.5" />,
+              "Cambio",
+              metrics.priceChange !== 0 ? `${metrics.priceChange > 0 ? "+" : ""}${metrics.priceChangePercent.toFixed(2)}%` : "--",
+              metrics.priceChange > 0 ? "text-green-600 dark:text-green-400" : metrics.priceChange < 0 ? "text-red-600 dark:text-red-400" : "text-foreground",
+              "vs lectura anterior"
+            )}
+          </div>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-          {metricCard(
-            <Minus className="h-3.5 w-3.5" />,
-            "RSI (14)",
-            analysis.rsi.toFixed(2),
-            analysis.rsi > 70 ? "text-red-600 dark:text-red-400" : analysis.rsi < 30 ? "text-green-600 dark:text-green-400" : "text-foreground",
-            analysis.rsi > 70 ? "Sobrecompra" : analysis.rsi < 30 ? "Sobreventa" : "Neutral"
-          )}
-          {metricCard(
-            <ArrowRight className="h-3.5 w-3.5" />,
-            "Senal MA",
-            analysis.ma5 > analysis.ma20 ? "Alcista" : "Bajista",
-            analysis.ma5 > analysis.ma20 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400",
-            `MA5: ${formatPrice(analysis.ma5)} vs MA20: ${formatPrice(analysis.ma20)}`
-          )}
-          {metricCard(
-            <BarChart3 className="h-3.5 w-3.5" />,
-            "Escenario",
-            analysis.scenario,
-            "text-foreground",
-            "Proximas horas"
-          )}
-          {metricCard(
-            signalIcon,
-            "Senal General",
-            overallSignal,
-            signalColor,
-            ""
-          )}
+        {/* ─── Medio plazo · 1h ─── */}
+        <div>
+          <div className="flex items-center gap-2 mb-2.5">
+            <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Medio plazo · 1h</span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            {metricCard(
+              <Minus className="h-3.5 w-3.5" />,
+              "RSI (14)",
+              analysis.rsi.toFixed(2),
+              analysis.rsi > 70 ? "text-red-600 dark:text-red-400" : analysis.rsi < 30 ? "text-green-600 dark:text-green-400" : "text-foreground",
+              analysis.rsi > 70 ? "Sobrecompra" : analysis.rsi < 30 ? "Sobreventa" : "Neutral"
+            )}
+            {metricCard(
+              <ArrowRight className="h-3.5 w-3.5" />,
+              "Senal MA",
+              analysis.ma5 > analysis.ma20 ? "Alcista" : "Bajista",
+              analysis.ma5 > analysis.ma20 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400",
+              `MA5: ${formatPrice(analysis.ma5)} vs MA20: ${formatPrice(analysis.ma20)}`
+            )}
+            {metricCard(
+              <BarChart3 className="h-3.5 w-3.5" />,
+              "Escenario",
+              analysis.scenario,
+              "text-foreground",
+              "Proximas horas"
+            )}
+            {metricCard(
+              signalIcon,
+              "Senal General",
+              overallSignal,
+              signalColor,
+              metrics.volatility < 1 ? "Baja liquidacion — senal atenuada" : ""
+            )}
+          </div>
         </div>
 
         {historyStats && (
