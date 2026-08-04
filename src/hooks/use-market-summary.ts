@@ -2,6 +2,7 @@
 
 import { useMemo } from "react"
 import { useBcv } from "@/hooks/use-bcv"
+import type { Change24h } from "@/hooks/use-24h-change"
 
 export type MarketTrend = "up" | "down" | "stable"
 
@@ -21,48 +22,57 @@ export interface MarketSummary {
   hasData: boolean
 }
 
-export function useMarketSummary(spark: number[], avgPrice: number): MarketSummary {
+export function useMarketSummary(
+  spark: number[],
+  avgPrice: number,
+  dbChange?: Change24h | null
+): MarketSummary {
   const { latest: bcvLatest } = useBcv()
 
-  const sparkStats = useMemo((): { changePct: number; trend: MarketTrend } | null => {
-    if (spark.length < 2) return null
-    const first = spark[0]
-    const last = spark[spark.length - 1]
+  const primarySeries = useMemo(() => {
+    if (dbChange?.prices && dbChange.prices.length >= 2) return dbChange.prices
+    return spark
+  }, [dbChange, spark])
+
+  const seriesStats = useMemo((): { changePct: number; trend: MarketTrend } | null => {
+    if (primarySeries.length < 2) return null
+    const first = primarySeries[0]
+    const last = primarySeries[primarySeries.length - 1]
     const changePct = first > 0 ? ((last - first) / first) * 100 : 0
     const trend: MarketTrend = changePct > 0.1 ? "up" : changePct < -0.1 ? "down" : "stable"
     return { changePct, trend }
-  }, [spark])
+  }, [primarySeries])
 
-  const trend: MarketTrend = sparkStats?.trend ?? "stable"
-  const changePct = sparkStats?.changePct ?? 0
+  const trend: MarketTrend = dbChange?.trend ?? seriesStats?.trend ?? "stable"
+  const changePct = dbChange?.changePct ?? seriesStats?.changePct ?? 0
 
   const volatility = useMemo(() => {
-    if (spark.length < 3) return 0
-    const mean = spark.reduce((a, b) => a + b, 0) / spark.length
-    const variance = spark.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / spark.length
+    if (primarySeries.length < 3) return 0
+    const mean = primarySeries.reduce((a, b) => a + b, 0) / primarySeries.length
+    const variance = primarySeries.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / primarySeries.length
     return Math.sqrt(variance) / mean
-  }, [spark])
+  }, [primarySeries])
 
-  const sparkSummary = useMemo(() => {
-    if (spark.length < 2) return null
+  const seriesSummary = useMemo(() => {
+    if (primarySeries.length < 2) return null
     const window = 8
-    const recent = spark.slice(-window)
-    const prev = spark.slice(-window * 2, -window)
+    const recent = primarySeries.slice(-window)
+    const prev = primarySeries.slice(-window * 2, -window)
     if (prev.length === 0) return null
     const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length
     const prevAvg = prev.reduce((a, b) => a + b, 0) / prev.length
     const drift = prevAvg > 0 ? ((recentAvg - prevAvg) / prevAvg) * 100 : 0
     return { drift, recentAvg, prevAvg }
-  }, [spark])
+  }, [primarySeries])
 
   const sentiment = useMemo((): MarketSentiment | null => {
-    if (!sparkStats || !sparkSummary) return null
-    const { drift } = sparkSummary
+    if (!seriesStats || !seriesSummary) return null
+    const { drift } = seriesSummary
     const momentum = drift >= 0.05 ? "acelerando" : drift <= -0.05 ? "desacelerando" : "sostenido"
     const direction = trend === "up" ? "al alza" : trend === "down" ? "a la baja" : "lateral"
     const volLabel = volatility > 0.008 ? "volatilidad elevada" : volatility > 0.004 ? "volatilidad moderada" : "baja volatilidad"
     return { momentum, direction, volLabel }
-  }, [sparkStats, sparkSummary, trend, volatility])
+  }, [seriesStats, seriesSummary, trend, volatility])
 
   const brecha = useMemo(() => {
     if (!bcvLatest || avgPrice <= 0) return null
@@ -76,6 +86,6 @@ export function useMarketSummary(spark: number[], avgPrice: number): MarketSumma
     sentiment,
     brecha,
     bcv: bcvLatest?.usd_ves ?? null,
-    hasData: spark.length >= 2,
+    hasData: primarySeries.length >= 2,
   }
 }

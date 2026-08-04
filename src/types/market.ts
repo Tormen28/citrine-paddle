@@ -47,20 +47,3 @@ export interface PriceStats {
   max: string
   spread: string
 }
-
-export interface AlertThresholds {
-  sellPriceAbove: number | null
-  sellPriceBelow: number | null
-  buyPriceAbove: number | null
-  buyPriceBelow: number | null
-  spreadAbove: number | null
-  soundEnabled: boolean
-}
-
-export interface PriceAlert {
-  type: "sell" | "buy" | "spread"
-  condition: "above" | "below"
-  value: number
-  triggered: boolean
-  triggeredAt: Date | null
-}

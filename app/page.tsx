@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useMarketSummary, type MarketSummary } from "@/hooks/use-market-summary"
 import { DashboardHeader } from "@/components/ui/dashboard-header"
 import { ExchangeCard } from "@/components/ui/exchange-card"
@@ -14,8 +14,11 @@ import { CurrencyConverter } from "@/components/ui/currency-converter"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useRates } from "@/hooks/use-rates"
 import { useBcv } from "@/hooks/use-bcv"
+import { use24hChange } from "@/hooks/use-24h-change"
+import { useAlertWatcher } from "@/hooks/use-alert-watcher"
 import { DataRange, DEFAULT_RANGE, RANGE_OPTIONS } from "@/lib/data-range"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { OverviewPriceChart } from "@/components/ui/overview-price-chart"
 import {
   AlertCircle,
   ArrowUp,
@@ -44,7 +47,16 @@ export default function Home() {
     metrics,
   } = useRates()
 
-  const summary = useMarketSummary(spark, data?.avgPrice || 0)
+  const dbChange = use24hChange()
+  const summary = useMarketSummary(spark, data?.avgPrice || 0, dbChange)
+  const { checkMarket } = useAlertWatcher()
+
+  const globalSpread = data?.globalSpread ?? null
+  const changePct = summary.changePct
+
+  useEffect(() => {
+    checkMarket(globalSpread, changePct)
+  }, [checkMarket, globalSpread, changePct])
 
   const renderSection = () => {
     switch (currentSection) {
@@ -89,6 +101,7 @@ export default function Home() {
           <AlertConfig
             currentSpread={data?.globalSpread}
             currentPrice={data?.avgPrice}
+            currentChange={summary.changePct}
           />
         )
       default:
@@ -239,6 +252,8 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
           </div>
         </div>
       </div>
+
+      <OverviewPriceChart />
 
       <MarketSummaryCard
         summary={summary}
