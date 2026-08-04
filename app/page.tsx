@@ -253,8 +253,6 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
         </div>
       </div>
 
-      <OverviewPriceChart />
-
       <MarketSummaryCard
         summary={summary}
         avgPrice={avgPrice}
@@ -361,6 +359,8 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
         bcvRate={bcvLatest?.usd_ves ?? 0}
         brecha={bcvLatest?.brecha ?? null}
       />
+
+      <OverviewPriceChart />
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1">
