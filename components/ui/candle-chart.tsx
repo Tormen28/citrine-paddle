@@ -19,8 +19,6 @@ interface Candle {
 }
 
 const TIMEFRAMES = [
-  { label: "5m", value: "5m", group: "short" as const },
-  { label: "10m", value: "10m", group: "short" as const },
   { label: "15m", value: "15m", group: "short" as const },
   { label: "30m", value: "30m", group: "short" as const },
   { label: "1h", value: "1h", group: "medium" as const },
