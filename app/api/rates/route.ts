@@ -96,6 +96,8 @@ export async function GET(): Promise<NextResponse<RatesResponse>> {
       globalSpread: Math.round(globalSpread * 100) / 100,
       avgPrice: Math.round(avgPrice * 1000) / 1000,
       source: "criptoya",
+    }, {
+      headers: { "Cache-Control": "public, s-maxage=5, stale-while-revalidate=10" },
     })
   } catch (error) {
     console.error("Error fetching rates:", error)
@@ -108,6 +110,8 @@ export async function GET(): Promise<NextResponse<RatesResponse>> {
       avgPrice: 0,
       source: "criptoya",
       error: error instanceof Error ? error.message : "Unknown error",
+    }, {
+      headers: { "Cache-Control": "public, s-maxage=5, stale-while-revalidate=10" },
     })
   }
 }

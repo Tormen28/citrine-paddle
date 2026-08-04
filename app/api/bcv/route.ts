@@ -59,7 +59,9 @@ export async function GET(request: Request) {
         }
       })
 
-      return NextResponse.json({ success: true, data })
+      return NextResponse.json({ success: true, data }, {
+        headers: { "Cache-Control": "public, s-maxage=5, stale-while-revalidate=10" },
+      })
     }
 
     const [rateRows, snapshotRows] = await Promise.all([
@@ -92,6 +94,8 @@ export async function GET(request: Request) {
         brecha,
         updated_at: latest.updated_at,
       },
+    }, {
+      headers: { "Cache-Control": "public, s-maxage=5, stale-while-revalidate=10" },
     })
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err)
