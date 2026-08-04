@@ -16,7 +16,8 @@
     }
   ],
   "vars": {
-    "SUPABASE_URL": "https://evaxjsxrhmxoiqvmxxma.supabase.co"
+    "SUPABASE_URL": "https://evaxjsxrhmxoiqvmxxma.supabase.co",
+    "SUPABASE_SECRET_KEY": "{SUPABASE_SECRET_KEY}"
   },
   "observability": {
     "enabled": true
