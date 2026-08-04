@@ -248,12 +248,17 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
                 {changePct.toFixed(2)}%
               </span>
             </div>
-            <Sparkline data={spark} />
+            <Sparkline data={spark} trend={trend} />
           </div>
         </div>
       </div>
 
       <OverviewPriceChart />
+
+      <MarketSummaryCard
+        summary={summary}
+        avgPrice={avgPrice}
+      />
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
@@ -355,11 +360,6 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
         avgPrice={avgPrice}
         bcvRate={bcvLatest?.usd_ves ?? 0}
         brecha={bcvLatest?.brecha ?? null}
-      />
-
-      <MarketSummaryCard
-        summary={summary}
-        avgPrice={avgPrice}
       />
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -540,7 +540,7 @@ function MarketSummaryCard({ summary, avgPrice }: MarketSummaryCardProps) {
   )
 }
 
-function Sparkline({ data }: { data: number[] }) {
+function Sparkline({ data, trend }: { data: number[]; trend: "up" | "down" | "stable" }) {
   if (data.length < 2) return <Skeleton className="h-16 w-full" />
 
   const min = Math.min(...data)
@@ -555,8 +555,7 @@ function Sparkline({ data }: { data: number[] }) {
         `${(i * step).toFixed(2)},${(H - ((v - min) / range) * H).toFixed(2)}`
     )
     .join(" ")
-  const up = data[data.length - 1] >= data[0]
-  const color = up ? "#22c55e" : "#ef4444"
+  const color = trend === "up" ? "#22c55e" : trend === "down" ? "#ef4444" : "#eab308"
 
   return (
     <svg
