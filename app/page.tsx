@@ -87,7 +87,7 @@ export default function Home() {
             <PriceProjection
               advertisements={(data?.rates || []).map((rate) => ({
                 price: rate.bid,
-                available: 0,
+                available: 1,
                 orderCount: 0,
                 advertiser: { nickName: rate.name, monthOrderCount: 0 },
               }))}

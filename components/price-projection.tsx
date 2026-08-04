@@ -251,8 +251,8 @@ export function PriceProjection({ advertisements = [], tradeType, isLoading }: P
         },
       })
 
-      // Crear puntos de precio para los próximos 365 días (para permitir filtrado amplio)
-      for (let i = 1; i <= 365; i++) {
+      // Crear puntos de precio para los próximos 7 días
+      for (let i = 1; i <= 7; i++) {
         const futureDate = new Date(today)
         futureDate.setDate(today.getDate() + i)
 
@@ -276,7 +276,7 @@ export function PriceProjection({ advertisements = [], tradeType, isLoading }: P
 
           // Marcar el día pico
           if (i === peakDay) {
-            event = tradeType === "SELL" ? "✓ Mejor día para vender" : "Precio máximo"
+            event = "Pico de la estimación"
           }
         } else if (trend === "down") {
           // Curva descendente que alcanza su mínimo en el día pico y luego se estabiliza o sube ligeramente
@@ -295,7 +295,7 @@ export function PriceProjection({ advertisements = [], tradeType, isLoading }: P
 
           // Marcar el día mínimo
           if (i === peakDay) {
-            event = tradeType === "BUY" ? "✓ Mejor día para comprar" : "Precio mínimo"
+            event = "Mínimo de la estimación"
           }
         } else {
           // Fluctuación determinista pequeña para precios estables basada en el día
@@ -328,22 +328,12 @@ export function PriceProjection({ advertisements = [], tradeType, isLoading }: P
 
         // Determinar si este día es un punto de interés (si no se ha asignado ya)
         if (event === "") {
-          if (i === 7) {
-            event = "Proyección a 7 días"
-          } else if (i === 14) {
-            event = "Proyección a 14 días"
-          } else if (i === 30) {
-            event = "Proyección a 30 días"
-          } else if (i === 1) {
+          if (i === 1) {
             event = "Mañana"
           } else if (i === 2) {
             event = "Pasado mañana"
-          } else if (i === 90) {
-            event = "Proyección a 3 meses"
-          } else if (i === 180) {
-            event = "Proyección a 6 meses"
-          } else if (i === 365) {
-            event = "Proyección a 1 año"
+          } else if (i === 7) {
+            event = "Estimación a 7 días"
           }
         }
 
@@ -355,38 +345,19 @@ export function PriceProjection({ advertisements = [], tradeType, isLoading }: P
         })
       }
 
-      // Si no se ha marcado ningún día como el mejor para comprar/vender, marcar el más adecuado
-      const hasBestDay = allPricePoints.some(
-        (point) => point.event.includes("Mejor día para vender") || point.event.includes("Mejor día para comprar"),
-      )
-
-      if (!hasBestDay) {
-        if (tradeType === "SELL") {
-          if (trend === "up") {
-            // Para vender, el mejor día es cuando el precio es más alto
-            const bestPoint = allPricePoints.reduce(
-              (max, point, index) => (point.prices.avg > max.point.prices.avg ? { point, index } : max),
-              { point: allPricePoints[0], index: 0 },
-            )
-            allPricePoints[bestPoint.index].event = "✓ Mejor día para vender"
-          } else if (trend === "down") {
-            // Si la tendencia es a la baja, el mejor día es hoy
-            allPricePoints[0].event = "✓ Mejor día para vender (hoy)"
-          }
-        } else {
-          // BUY
-          if (trend === "down") {
-            // Para comprar, el mejor día es cuando el precio es más bajo
-            const bestPoint = allPricePoints.reduce(
-              (min, point, index) => (point.prices.avg < min.point.prices.avg ? { point, index } : min),
-              { point: allPricePoints[0], index: 0 },
-            )
-            allPricePoints[bestPoint.index].event = "✓ Mejor día para comprar"
-          } else if (trend === "up") {
-            // Si la tendencia es al alza, el mejor día es hoy
-            allPricePoints[0].event = "✓ Mejor día para comprar (hoy)"
-          }
-        }
+      // Si no se ha marcado ningún día como pico o mínimo, el mejor día es el más alto/bajo de la estimación
+      if (tradeType === "SELL" && trend === "up") {
+        const bestPoint = allPricePoints.reduce(
+          (max, point, index) => (point.prices.avg > max.point.prices.avg ? { point, index } : max),
+          { point: allPricePoints[0], index: 0 },
+        )
+        allPricePoints[bestPoint.index].event = "Pico de la estimación"
+      } else if (tradeType === "BUY" && trend === "down") {
+        const bestPoint = allPricePoints.reduce(
+          (min, point, index) => (point.prices.avg < min.point.prices.avg ? { point, index } : min),
+          { point: allPricePoints[0], index: 0 },
+        )
+        allPricePoints[bestPoint.index].event = "Mínimo de la estimación"
       }
 
       // Filtrar los puntos de precio según el rango de fechas seleccionado
@@ -469,44 +440,27 @@ export function PriceProjection({ advertisements = [], tradeType, isLoading }: P
       let recommendation = ""
       let bestTime = ""
 
-      // Encontrar el mejor día marcado
-      const bestDay = allPricePoints.find(
-        (point) => point.event.includes("Mejor día para vender") || point.event.includes("Mejor día para comprar"),
-      )
-
-      // Verificar que bestDay y su fecha sean válidos antes de usarlos
-      const bestDate =
-        bestDay && bestDay.date && bestDay.date instanceof Date && !isNaN(bestDay.date.getTime())
-          ? formatDate(bestDay.date)
-          : "los próximos días"
-
       if (tradeType === "SELL") {
         if (trend === "up") {
-          const projectedBestPrice = bestDay ? bestDay.prices[priceBaseType] : selectedProjectedPrice
-          recommendation = `Se proyecta un aumento en los precios. El precio podría subir a ${formatCurrency(projectedBestPrice, "VES")} para el ${bestDate}.`
-          bestTime = bestDay?.event.includes("hoy")
-            ? "Vende hoy mismo para evitar posibles caídas"
-            : `Espera hasta el ${bestDate} para vender al mejor precio.`
+          recommendation = `Se estima un leve aumento en los próximos días. El precio podría acercarse a ${formatCurrency(selectedProjectedPrice, "VES")}.`
+          bestTime = "Si planeas vender, la tendencia sugiere esperar unos días."
         } else if (trend === "down") {
-          recommendation = `Se proyecta una disminución en los precios desde el precio actual de ${formatCurrency(selectedPrice, "VES")}. Los precios comenzarán a bajar pronto.`
-          bestTime = "Vende hoy o lo antes posible para obtener el mejor precio."
+          recommendation = `Se estima una leve disminución desde el precio actual de ${formatCurrency(selectedPrice, "VES")}.`
+          bestTime = "Si planeas vender, la tendencia sugiere no esperar."
         } else {
-          recommendation = `Los precios parecen estables alrededor del precio actual de ${formatCurrency(selectedPrice, "VES")}. No se esperan cambios significativos en los próximos días.`
+          recommendation = `Los precios parecen estables alrededor de ${formatCurrency(selectedPrice, "VES")}. No se esperan cambios significativos en los próximos días.`
           bestTime = "El momento de venta no es crítico, los precios son estables."
         }
       } else {
         // BUY
         if (trend === "up") {
-          recommendation = `Se proyecta un aumento en los precios desde el precio actual de ${formatCurrency(selectedPrice, "VES")}. Los precios comenzarán a subir pronto.`
-          bestTime = "Compra hoy o lo antes posible para obtener el mejor precio."
+          recommendation = `Se estima un leve aumento desde el precio actual de ${formatCurrency(selectedPrice, "VES")}.`
+          bestTime = "Si planeas comprar, la tendencia sugiere no esperar."
         } else if (trend === "down") {
-          const projectedBestPrice = bestDay ? bestDay.prices[priceBaseType] : selectedProjectedPrice
-          recommendation = `Se proyecta una disminución en los precios. El precio podría bajar a ${formatCurrency(projectedBestPrice, "VES")} para el ${bestDate}.`
-          bestTime = bestDay?.event.includes("hoy")
-            ? "Compra hoy mismo para aprovechar el precio actual"
-            : `Espera hasta el ${bestDate} para comprar al mejor precio.`
+          recommendation = `Se estima una leve disminución en los próximos días. El precio podría acercarse a ${formatCurrency(selectedProjectedPrice, "VES")}.`
+          bestTime = "Si planeas comprar, la tendencia sugiere esperar unos días."
         } else {
-          recommendation = `Los precios parecen estables alrededor del precio actual de ${formatCurrency(selectedPrice, "VES")}. No se esperan cambios significativos en los próximos días.`
+          recommendation = `Los precios parecen estables alrededor de ${formatCurrency(selectedPrice, "VES")}. No se esperan cambios significativos en los próximos días.`
           bestTime = "El momento de compra no es crítico, los precios son estables."
         }
       }
@@ -660,7 +614,7 @@ export function PriceProjection({ advertisements = [], tradeType, isLoading }: P
       <div className="rounded-xl border bg-amber-500/10 border-amber-500/30 p-3 flex items-start gap-2">
         <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
         <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
-          Solo estimacion algoritmica. No es consejo financiero.
+          Estimación a muy corto plazo (7 días) basada en las tasas actuales. No es consejo financiero.
         </p>
       </div>
 
@@ -764,7 +718,7 @@ export function PriceProjection({ advertisements = [], tradeType, isLoading }: P
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Mejor momento</p>
             <p className="text-xs">{projection.bestTime}</p>
           </div>
-          <div className="text-[10px] text-muted-foreground mt-3">Basado en {advertisements.length} anuncios activos</div>
+          <div className="text-[10px] text-muted-foreground mt-3">Basado en {advertisements.length} tasas de exchanges en vivo</div>
         </div>
       </div>
 
@@ -821,7 +775,7 @@ export function PriceProjection({ advertisements = [], tradeType, isLoading }: P
       <div className="rounded-xl border bg-muted/30 p-4">
         <div className="flex items-center mb-3">
           <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-          <h3 className="text-sm font-semibold">Proyeccion de precios por fecha</h3>
+          <h3 className="text-sm font-semibold">Estimación de precios (próximos 7 días)</h3>
           {applyDateFilter && (
             <Badge variant="outline" className="ml-2 text-[10px]">
               {projection.pricePoints.length} fechas
@@ -887,7 +841,7 @@ export function PriceProjection({ advertisements = [], tradeType, isLoading }: P
 
       <div className="flex items-center justify-end">
         <Badge variant="outline" className="text-[10px]">
-          Fuente: Binance P2P
+          Estimación a partir de tasas en vivo
         </Badge>
       </div>
     </div>
