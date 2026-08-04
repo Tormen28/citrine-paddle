@@ -40,31 +40,43 @@ export function OverviewPriceChart() {
   const containerRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
 
-  useEffect(() => {
-    const controller = new AbortController()
+  const fetchData = useCallback((signal: AbortSignal, initial: boolean) => {
     const limit = range.limit ?? 50000
     const downsample = range.limit === null || range.limit > 8000 ? 600 : 400
     const url = `/api/history?limit=${limit}&downsample=${downsample}`
-    setIsLoading(true)
-    setError(null)
-    fetch(url, { signal: controller.signal })
+    if (initial) {
+      setIsLoading(true)
+      setError(null)
+    }
+    fetch(url, { signal })
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.data) {
           setHistory(data.data)
-        } else {
+        } else if (initial) {
           setError("No data")
         }
         setIsLoading(false)
       })
       .catch((err) => {
         if (err.name !== "AbortError") {
-          setError(err.message)
+          if (initial) setError(err.message)
           setIsLoading(false)
         }
       })
-    return () => controller.abort()
   }, [range])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetchData(controller.signal, true)
+    const interval = setInterval(() => {
+      fetchData(controller.signal, false)
+    }, 60000)
+    return () => {
+      controller.abort()
+      clearInterval(interval)
+    }
+  }, [fetchData])
 
   const chartData = useMemo((): ChartDataPoint[] => {
     return history.map((item: any) => ({
