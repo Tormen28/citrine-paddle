@@ -255,11 +255,6 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
 
       <OverviewPriceChart />
 
-      <MarketSummaryCard
-        summary={summary}
-        avgPrice={avgPrice}
-      />
-
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
@@ -360,6 +355,11 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
         avgPrice={avgPrice}
         bcvRate={bcvLatest?.usd_ves ?? 0}
         brecha={bcvLatest?.brecha ?? null}
+      />
+
+      <MarketSummaryCard
+        summary={summary}
+        avgPrice={avgPrice}
       />
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
