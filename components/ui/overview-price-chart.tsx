@@ -71,7 +71,7 @@ export function OverviewPriceChart() {
     fetchData(controller.signal, true)
     const interval = setInterval(() => {
       fetchData(controller.signal, false)
-    }, 300000)
+    }, 900000)
     return () => {
       controller.abort()
       clearInterval(interval)

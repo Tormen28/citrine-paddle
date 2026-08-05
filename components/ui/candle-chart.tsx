@@ -125,7 +125,7 @@ export function CandleChart({ className, range }: { className?: string; range: D
     setIsLoading(true)
     setError(null)
     const controller = fetchCandles()
-    const interval = setInterval(fetchCandles, 300000)
+    const interval = setInterval(fetchCandles, 900000)
     return () => { controller.abort(); clearInterval(interval) }
   }, [fetchCandles])
 

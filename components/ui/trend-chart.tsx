@@ -84,7 +84,7 @@ export function TrendChart({ range }: { range: DataRange }) {
 
   useEffect(() => {
     const controller = fetchData()
-    const interval = setInterval(fetchData, 300000)
+    const interval = setInterval(fetchData, 900000)
     return () => { controller.abort(); clearInterval(interval) }
   }, [fetchData])
 
