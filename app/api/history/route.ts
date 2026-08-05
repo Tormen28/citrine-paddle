@@ -35,7 +35,9 @@ export async function GET(request: Request) {
       volume: snap.volume,
     }))
 
-    return NextResponse.json({ success: true, data: chartData })
+    return NextResponse.json({ success: true, data: chartData }, {
+      headers: { "Cache-Control": "public, s-maxage=5, stale-while-revalidate=10" },
+    })
   } catch (error: unknown) {
     console.error("Error en /api/history:", error)
     const message = error instanceof Error ? error.message : "Error obteniendo el historial"
