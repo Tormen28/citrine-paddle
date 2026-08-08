@@ -4,71 +4,77 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 0 17% 98%;
+    --foreground: 48 22% 5%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 48 22% 5%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 48 22% 5%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 22 100% 53%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 69 21% 80%;
+    --secondary-foreground: 48 22% 5%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 60 11% 93%;
+    --muted-foreground: 30 8% 40%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 22 90% 93%;
+    --accent-foreground: 22 80% 35%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 60 11% 88%;
+    --input: 60 11% 88%;
+    --ring: 22 100% 53%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+
+    --chart-1: 22 100% 53%;
+    --chart-2: 48 22% 5%;
+    --chart-3: 69 21% 55%;
+    --chart-4: 30 100% 45%;
+    --chart-5: 0 17% 72%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 48 22% 5%;
+    --foreground: 0 17% 98%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 48 16% 8%;
+    --card-foreground: 0 17% 98%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 48 16% 8%;
+    --popover-foreground: 0 17% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 22 100% 53%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 48 10% 14%;
+    --secondary-foreground: 0 17% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 48 10% 14%;
+    --muted-foreground: 45 8% 60%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 22 40% 18%;
+    --accent-foreground: 22 90% 80%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62.8% 45%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 48 10% 16%;
+    --input: 48 10% 16%;
+    --ring: 22 100% 53%;
   }
 }
 
 /* Cambiar el color del texto en los campos de entrada */
 input {
-  color: #3b82f6; /* Azul (blue-500 en Tailwind) */
+  color: #ff6811; /* Naranja de marca (brand.primary) */
 }
 
 input::placeholder {
@@ -82,7 +88,7 @@ input::placeholder {
 .bg-blue-50,
 .bg-green-50,
 .bg-yellow-50 {
-  color: #1f2937 !important; /* Texto oscuro para fondos claros (gray-800) */
+  color: #0e0d09 !important; /* Texto oscuro (brand.dark) para fondos claros */
 }
 
 /* Asegurar que los badges tengan el texto visible */
@@ -94,7 +100,7 @@ input::placeholder {
 .bg-blue-50 *,
 .bg-green-50 *,
 .bg-yellow-50 * {
-  color: #1f2937 !important; /* Texto oscuro para elementos dentro de fondos claros */
+  color: #0e0d09 !important; /* Texto oscuro para elementos dentro de fondos claros */
 }
 
 /* Excepción para iconos dentro de badges */
@@ -113,5 +119,124 @@ input::placeholder {
   }
   body {
     @apply bg-background text-foreground;
+    background-image: radial-gradient(ellipse 900px 350px at 25% -15%, rgba(255, 104, 17, 0.05) 0%, transparent 60%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
   }
+  .dark body {
+    background-image: radial-gradient(ellipse 900px 350px at 25% -15%, rgba(255, 104, 17, 0.08) 0%, transparent 60%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+}
+
+/* ===== Ecosistema Ya Te Cambio: utilidades de marca ===== */
+
+/* Gradiente direccional de marca: borde afilado (naranja) -> cola difusa (negro cálido) */
+.brand-gradient {
+  background: linear-gradient(135deg, #ff6811 0%, #e0550a 45%, #0e0d09 130%);
+}
+
+.brand-gradient-soft {
+  background: linear-gradient(135deg, rgba(255, 104, 17, 0.14) 0%, rgba(255, 104, 17, 0.03) 60%, transparent 100%);
+}
+
+/* Panel de cabecera de marca: fondo oscuro con glow naranja en dark, sutil en light */
+.brand-header {
+  background: hsl(22 100% 53% / 0.05);
+  border-color: hsl(22 100% 53% / 0.12);
+}
+
+.dark .brand-header {
+  background:
+    radial-gradient(ellipse 500px 250px at 90% -10%, rgba(255, 104, 17, 0.13) 0%, transparent 55%),
+    #0E0D09;
+  border-color: hsl(22 100% 53% / 0.18);
+}
+
+/* Texto con gradiente de marca (títulos) */
+.brand-text-gradient {
+  background: linear-gradient(120deg, #ff6811 0%, #ff8c4a 55%, #ffb38a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Sombra cálida de marca */
+.brand-shadow {
+  box-shadow: 0 8px 30px -8px rgba(255, 104, 17, 0.35);
+}
+
+/* Badge de marca (pill) */
+.brand-pill {
+  background: linear-gradient(135deg, #ff6811 0%, #d94f05 100%);
+  color: #ffffff;
+  border-radius: 9999px;
+}
+
+/* ===== Animaciones sutiles de marca ===== */
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0%,
+    hsl(var(--muted-foreground) / 0.1) 50%,
+    hsl(var(--muted)) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.35s ease-out both;
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.82; }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2.4s ease-in-out infinite;
+}
+
+/* ===== Scrollbar personalizada de marca ===== */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #FF6811;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ff8c42;
+}
+
+* {
+  scrollbar-color: #FF6811 transparent;
+  scrollbar-width: thin;
 }

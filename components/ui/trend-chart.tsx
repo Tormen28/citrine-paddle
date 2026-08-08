@@ -254,8 +254,8 @@ export function TrendChart({ range }: { range: DataRange }) {
           <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} className="w-full select-none" style={{ height: 350 }}>
             <defs>
               <linearGradient id="avgGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#6366f1" stopOpacity="0.15" />
-                <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+                <stop offset="0%" stopColor="#ff6811" stopOpacity="0.15" />
+                <stop offset="100%" stopColor="#ff6811" stopOpacity="0" />
               </linearGradient>
             </defs>
             {gridPrices.map((price, i) => (
@@ -278,7 +278,7 @@ export function TrendChart({ range }: { range: DataRange }) {
                 />
                 <polyline points={chartData.map((d, i) => `${scaleX(i)},${scaleY(d.bestBid)}`).join(" ")} fill="none" stroke="#22c55e" strokeWidth={1.5} />
                 <polyline points={chartData.map((d, i) => `${scaleX(i)},${scaleY(d.bestAsk)}`).join(" ")} fill="none" stroke="#ef4444" strokeWidth={1.5} />
-                <polyline points={chartData.map((d, i) => `${scaleX(i)},${scaleY(d.avg)}`).join(" ")} fill="none" stroke="#6366f1" strokeWidth={2} strokeDasharray="4 2" />
+                <polyline points={chartData.map((d, i) => `${scaleX(i)},${scaleY(d.avg)}`).join(" ")} fill="none" stroke="#ff6811" strokeWidth={2} strokeDasharray="4 2" />
               </>
             )}
             {hoverIdx !== null && hoverIdx < chartData.length && (
@@ -287,7 +287,7 @@ export function TrendChart({ range }: { range: DataRange }) {
                 <line x1={PAD.left} y1={scaleY(chartData[hoverIdx].avg)} x2={W - PAD.right} y2={scaleY(chartData[hoverIdx].avg)} stroke="#6b7280" strokeWidth={1} strokeDasharray="4 4" />
                 <circle cx={scaleX(hoverIdx)} cy={scaleY(chartData[hoverIdx].bestBid)} r={4} fill="#22c55e" stroke="#fff" strokeWidth={1.5} />
                 <circle cx={scaleX(hoverIdx)} cy={scaleY(chartData[hoverIdx].bestAsk)} r={4} fill="#ef4444" stroke="#fff" strokeWidth={1.5} />
-                <circle cx={scaleX(hoverIdx)} cy={scaleY(chartData[hoverIdx].avg)} r={4} fill="#6366f1" stroke="#fff" strokeWidth={1.5} />
+                <circle cx={scaleX(hoverIdx)} cy={scaleY(chartData[hoverIdx].avg)} r={4} fill="#ff6811" stroke="#fff" strokeWidth={1.5} />
               </g>
             )}
           </svg>
@@ -305,7 +305,7 @@ export function TrendChart({ range }: { range: DataRange }) {
                   <span className="text-muted-foreground">Venta</span>
                   <span className="font-mono text-right tabular-nums text-red-500">{chartData[hoverIdx].bestAsk.toFixed(2)}</span>
                   <span className="text-muted-foreground">Prom</span>
-                  <span className="font-mono text-right tabular-nums text-indigo-500">{chartData[hoverIdx].avg.toFixed(2)}</span>
+                  <span className="font-mono text-right tabular-nums text-[#ff6811]">{chartData[hoverIdx].avg.toFixed(2)}</span>
                   <span className="text-muted-foreground">Spread</span>
                   <span className="font-mono text-right tabular-nums text-amber-500">{((chartData[hoverIdx].bestAsk - chartData[hoverIdx].bestBid) / chartData[hoverIdx].bestAsk * 100).toFixed(2)}%</span>
                 </div>
@@ -315,7 +315,7 @@ export function TrendChart({ range }: { range: DataRange }) {
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-3 text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-sm shadow-green-500/30" /><span>Mejor Compra</span></div>
           <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm shadow-red-500/30" /><span>Mejor Venta</span></div>
-          <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-sm shadow-indigo-500/30" /><span>Promedio</span></div>
+          <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-[#ff6811] shadow-sm shadow-[#ff6811]/30" /><span>Promedio</span></div>
           <span className="text-[10px] text-muted-foreground/60 ml-2">Scroll=zoom · Arrastra</span>
         </div>
       </CardContent>

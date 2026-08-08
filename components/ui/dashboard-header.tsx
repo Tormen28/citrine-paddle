@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -59,17 +60,40 @@ export function DashboardHeader({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">Dashboard USDT/VES</h1>
-          <p className="text-xs text-muted-foreground">
-            {isLoading && !data
-              ? "Cargando..."
-              : error && !data
-              ? `Error: ${error}`
-              : `${relativeTime} · ${data?.rates.length || 0} exchanges`}
-          </p>
-        </div>
+      <div className="relative overflow-hidden rounded-2xl border brand-header p-4 sm:p-5">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/logo-yatecambio.png"
+              alt="Ya Te Cambio"
+              width={110}
+              height={50}
+              className="h-9 w-auto shrink-0 object-contain"
+              priority
+            />
+            <div>
+              <h1 className="text-xl font-bold tracking-tight">Ya Te Cambio <span className="text-muted-foreground font-normal">· Dashboard P2P</span></h1>
+              <div className="text-xs text-muted-foreground">
+                {isLoading && !data ? (
+                  <Skeleton className="h-3 w-40 inline-block align-middle" />
+                ) : error && !data ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="inline-block h-2 w-2 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)] animate-pulse" />
+                    Error: {error}
+                  </span>
+                ) : data ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className={`inline-block h-2 w-2 rounded-full animate-pulse ${
+                      lastUpdated && (Date.now() - lastUpdated.getTime()) > 300_000
+                        ? "bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.6)]"
+                        : "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]"
+                    }`} />
+                    En vivo · {relativeTime} · {data.rates.length || 0} exchanges
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          </div>
 
         <div className="flex items-center gap-1.5">
           <Button
@@ -102,16 +126,17 @@ export function DashboardHeader({
             </Button>
           )}
         </div>
+        </div>
       </div>
 
-      <div className="flex gap-0.5 p-1 bg-muted/50 rounded-xl overflow-x-auto">
+      <div className="flex gap-1 p-1 bg-muted/70 rounded-2xl overflow-x-auto">
         {sections.map((section) => (
           <button
             key={section.id}
             onClick={() => onSectionChange(section.id)}
-            className={`relative px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap ${
+            className={`relative px-4 py-2 rounded-xl text-xs font-medium transition-all duration-200 whitespace-nowrap ${
               currentSection === section.id
-                ? "bg-background text-foreground shadow-sm"
+                ? "brand-gradient text-white shadow-sm brand-shadow"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
           >

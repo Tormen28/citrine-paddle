@@ -129,7 +129,7 @@ export function ExchangeCard({
   const sortedByBestSell = [...rates].sort((a, b) => b.bid - a.bid)
 
   return (
-    <Card>
+    <Card className="transition-shadow duration-300 hover:shadow-[0_0_25px_rgba(255,104,17,0.12)]">
       <CardHeader className="pb-2">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>

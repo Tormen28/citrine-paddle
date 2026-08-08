@@ -30,6 +30,7 @@ import {
   RefreshCw,
 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useCountUp } from "@/hooks/use-count-up"
 
 type Section = "overview" | "exchanges" | "analisis" | "config"
 
@@ -57,6 +58,19 @@ export default function Home() {
   useEffect(() => {
     checkMarket(globalSpread, changePct)
   }, [checkMarket, globalSpread, changePct])
+
+  useEffect(() => {
+    if (typeof document === "undefined") return
+    if (data?.avgPrice) {
+      const price = data.avgPrice.toLocaleString("es-VE", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+      document.title = `Ya Te Cambio — USDT/VES: ${price} VES`
+    } else {
+      document.title = "Ya Te Cambio — Dashboard P2P"
+    }
+  }, [data?.avgPrice])
 
   const renderSection = () => {
     switch (currentSection) {
@@ -136,7 +150,16 @@ export default function Home() {
         </Alert>
       )}
 
-      {renderSection()}
+      <div key={currentSection} className="animate-fade-in-up">
+        {renderSection()}
+      </div>
+
+      <footer className="mt-10 pt-4 border-t border-border text-center text-xs text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="text-[#FF6811] font-bold">€</span>
+          Ya Te Cambio · Ecosistema
+        </span>
+      </footer>
     </main>
   )
 }
@@ -179,16 +202,41 @@ interface OverviewSectionProps {
 function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: OverviewSectionProps) {
   const { latest: bcvLatest, isLoading: bcvLoading } = useBcv()
   const { trend, changePct } = summary
+  const animatedPrice = useCountUp(avgPrice)
 
   if (isLoading && !data) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-40 w-full" />
-        <div className="grid gap-4 md:grid-cols-3">
-          <Skeleton className="h-28" />
-          <Skeleton className="h-28" />
-          <Skeleton className="h-28" />
+        <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-card to-muted/40 p-6">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-10 w-48" />
+              <Skeleton className="h-4 w-56" />
+            </div>
+            <div className="w-full lg:w-[45%]">
+              <Skeleton className="h-16 w-full" />
+            </div>
+          </div>
         </div>
+        <div className="rounded-xl border p-6 space-y-4">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <Skeleton className="h-20 rounded-xl" />
+            <Skeleton className="h-20 rounded-xl" />
+            <Skeleton className="h-20 rounded-xl" />
+            <Skeleton className="h-20 rounded-xl" />
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Skeleton className="h-36 rounded-xl" />
+          <Skeleton className="h-36 rounded-xl" />
+          <Skeleton className="h-36 rounded-xl" />
+        </div>
+        <Skeleton className="h-48 rounded-xl" />
+        <Skeleton className="h-[220px] rounded-xl" />
       </div>
     )
   }
@@ -216,8 +264,8 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
               Dólar paralelo hoy
             </p>
             <div className="mt-1 flex items-center gap-3 min-w-0">
-              <span className="text-3xl font-bold tabular-nums tracking-tight sm:text-4xl lg:text-5xl truncate">
-                {avgPrice.toLocaleString("es-VE", {
+              <span className="text-3xl font-bold tabular-nums tracking-tight sm:text-4xl lg:text-5xl truncate transition-colors duration-700 animate-pulse-soft">
+                {animatedPrice.toLocaleString("es-VE", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -282,6 +330,11 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
                     {bestAsk.exchange}
                   </span>
                 </p>
+                <div className="mt-3 pt-3 border-t">
+                  <span className="brand-gradient brand-shadow inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white">
+                    Comprar USDT
+                  </span>
+                </div>
               </>
             ) : (
               <span className="text-2xl font-bold text-muted-foreground">—</span>
@@ -312,6 +365,11 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
                     {bestBid.exchange}
                   </span>
                 </p>
+                <div className="mt-3 pt-3 border-t">
+                  <span className="brand-gradient brand-shadow inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white">
+                    Vender USDT
+                  </span>
+                </div>
               </>
             ) : (
               <span className="text-2xl font-bold text-muted-foreground">—</span>
@@ -386,13 +444,13 @@ function TrendBadge({ trend, changePct }: { trend: "up" | "down" | "stable"; cha
       ? "text-green-600 bg-green-100 dark:bg-green-900/30"
       : trend === "down"
       ? "text-red-600 bg-red-100 dark:bg-red-900/30"
-      : "text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30"
+      : "text-[#FF6811] bg-[#FF6811]/15"
   const label =
     trend === "up" ? "Subiendo" : trend === "down" ? "Bajando" : "Estable"
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${color}`}
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm ${color}`}
     >
       <Icon className="h-3.5 w-3.5" />
       {label} · {changePct > 0 ? "+" : ""}
@@ -431,14 +489,14 @@ function MarketSummaryCard({ summary, avgPrice }: MarketSummaryCardProps) {
       ? "text-green-600 dark:text-green-400"
       : trend === "down"
       ? "text-red-600 dark:text-red-400"
-      : "text-yellow-600 dark:text-yellow-400"
+      : "text-[#FF6811]"
 
   const trendChip =
     trend === "up"
       ? "bg-green-500/15 text-green-700 dark:text-green-300"
       : trend === "down"
       ? "bg-red-500/15 text-red-700 dark:text-red-300"
-      : "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300"
+      : "bg-[#FF6811]/15 text-[#FF6811]"
 
   const momentumChip =
     sentiment.momentum === "acelerando"
@@ -462,13 +520,13 @@ function MarketSummaryCard({ summary, avgPrice }: MarketSummaryCardProps) {
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
             <span
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold ${trendChip}`}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold shadow-sm ${trendChip}`}
             >
               <TrendIcon className="h-4 w-4" />
               {trend === "up" ? "Al alza" : trend === "down" ? "A la baja" : "Lateral"}
             </span>
             <span
-              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${momentumChip}`}
+              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium shadow-sm ${momentumChip}`}
             >
               {sentiment.momentum === "acelerando"
                 ? "↗ Acelerando"

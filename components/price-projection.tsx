@@ -580,7 +580,7 @@ export function PriceProjection({ advertisements = [], tradeType, isLoading }: P
         return tradeType === "SELL" ? (
           <TrendingUp className="h-5 w-5 text-green-500" />
         ) : (
-          <TrendingUp className="h-5 w-5 text-blue-500" />
+          <TrendingUp className="h-5 w-5 text-[#ff6811]" />
         )
       case "down":
         return tradeType === "SELL" ? (
