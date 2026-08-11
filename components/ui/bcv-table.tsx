@@ -24,7 +24,7 @@ export function BcvTable() {
 
   const rows =
     history.length > 0
-      ? history
+      ? history.filter((r) => r.p2p !== null && r.p2p !== undefined)
       : latest
       ? [
           {
