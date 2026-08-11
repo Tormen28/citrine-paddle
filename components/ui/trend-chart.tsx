@@ -30,7 +30,21 @@ function formatTooltipTime(epoch: number): string {
   return d.toLocaleDateString("es-VE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
 }
 
-export function TrendChart({ range }: { range: DataRange }) {
+function formatTooltipDate(iso: string): string {
+  const d = new Date(iso)
+  return d.toLocaleDateString("es-VE", { day: "2-digit", month: "short", year: "numeric" })
+}
+
+const RANGE_TO_BCV_DAYS: Record<string, number> = {
+  "1sem": 7,
+  "1mes": 30,
+  "3meses": 90,
+  "1anio": 365,
+  "todo": 1825,
+}
+
+export function TrendChart({ source, range }: { source?: "p2p" | "bcv"; range: DataRange }) {
+  const src = source ?? "p2p"
   const [history, setHistory] = useState<SnapshotRow[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -82,11 +96,63 @@ export function TrendChart({ range }: { range: DataRange }) {
     return controller
   }, [range])
 
+  const fetchBcvData = useCallback(() => {
+    const controller = new AbortController()
+    const days = RANGE_TO_BCV_DAYS[range.id] ?? 90
+    fetch(`/api/bcv?history=true&days=${days}`, { signal: controller.signal })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.data && data.data.length > 0) {
+          const bcvRows: SnapshotRow[] = data.data.map((row: { date: string; usd_ves: number }) => ({
+            time: Math.floor(new Date(row.date).getTime() / 1000),
+            buyPrice: row.usd_ves,
+            sellPrice: row.usd_ves,
+            spread: 0,
+          }))
+          setHistory((prev) => {
+            const z = zoomStateRef.current
+            const prevLen = prev.length > 0 ? prev.length : z.total
+            if (prevLen > 0) {
+              const ratio = z.viewEnd - z.viewStart > 0 ? (z.viewEnd - z.viewStart) / prevLen : 1
+              const newLen = bcvRows.length
+              const newViewLen = Math.max(5, Math.round(ratio * newLen))
+              const newStart = Math.max(0, Math.round((z.viewStart / prevLen) * newLen))
+              setViewStart(newStart)
+              setViewEnd(Math.min(newLen, newStart + newViewLen))
+            } else {
+              setViewEnd(bcvRows.length)
+            }
+            return bcvRows
+          })
+          setError(null)
+          setIsLoading(false)
+        } else {
+          setError("No hay datos BCV disponibles para este periodo")
+          setIsLoading(false)
+        }
+      })
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          setError(err.message)
+          setIsLoading(false)
+        }
+      })
+    return controller
+  }, [range])
+
   useEffect(() => {
+    if (src === "bcv") {
+      setIsLoading(true)
+      setError(null)
+      setHistory([])
+      const controller = fetchBcvData()
+      const interval = setInterval(fetchBcvData, 900000)
+      return () => { controller.abort(); clearInterval(interval) }
+    }
     const controller = fetchData()
     const interval = setInterval(fetchData, 900000)
     return () => { controller.abort(); clearInterval(interval) }
-  }, [fetchData])
+  }, [src === "bcv" ? "bcv" : "p2p", fetchData, fetchBcvData])
 
   const allData = useMemo((): ChartDataPoint[] => {
     return history.map((item: any) => ({
@@ -206,7 +272,7 @@ export function TrendChart({ range }: { range: DataRange }) {
   if (isLoading && chartData.length === 0) {
     return (
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><TrendingUp className="h-4 w-4 text-muted-foreground" />Tendencia USDT/VES</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><TrendingUp className="h-4 w-4 text-muted-foreground" />{src === "bcv" ? "Tendencia BCV" : "Tendencia USDT/VES"}</CardTitle></CardHeader>
         <CardContent className="pt-0"><Skeleton className="h-[350px] w-full rounded-xl" /></CardContent>
       </Card>
     )
@@ -215,8 +281,8 @@ export function TrendChart({ range }: { range: DataRange }) {
   if (error && chartData.length === 0) {
     return (
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><TrendingUp className="h-4 w-4 text-muted-foreground" />Tendencia USDT/VES</CardTitle></CardHeader>
-        <CardContent className="pt-0"><div className="h-[350px] flex items-center justify-center text-sm text-red-500">Error: {error}</div></CardContent>
+        <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><TrendingUp className="h-4 w-4 text-muted-foreground" />{src === "bcv" ? "Tendencia BCV" : "Tendencia USDT/VES"}</CardTitle></CardHeader>
+        <CardContent className="pt-0"><div className="h-[350px] flex items-center justify-center text-sm text-muted-foreground">{error}</div></CardContent>
       </Card>
     )
   }
@@ -226,8 +292,8 @@ export function TrendChart({ range }: { range: DataRange }) {
       <CardHeader className="pb-2">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <CardTitle className="flex items-center gap-2 text-base"><TrendingUp className="h-4 w-4 text-muted-foreground" />Tendencia USDT/VES</CardTitle>
-            <p className="text-xs text-muted-foreground mt-0.5">{chartData.length} de {allData.length} lecturas</p>
+            <CardTitle className="flex items-center gap-2 text-base"><TrendingUp className="h-4 w-4 text-muted-foreground" />{src === "bcv" ? "Tendencia BCV" : "Tendencia USDT/VES"}</CardTitle>
+            <p className="text-xs text-muted-foreground mt-0.5">{src === "bcv" ? "Tasa oficial diaria" : `${chartData.length} de ${allData.length} lecturas`}</p>
           </div>
           {latestPrice && (
             <div className="flex items-center gap-3">
@@ -297,7 +363,9 @@ export function TrendChart({ range }: { range: DataRange }) {
                 style={{ left: Math.min(mousePos.x + 15, (containerRef.current?.clientWidth ?? W) - 180), top: Math.max(mousePos.y - 120, 10) }}
               >
                 <div className="text-muted-foreground mb-2 text-[10px] font-medium">
-                  {formatTooltipTime(chartData[hoverIdx].timestamp)}
+                  {src === "bcv"
+                    ? formatTooltipDate(chartData[hoverIdx].time)
+                    : formatTooltipTime(chartData[hoverIdx].timestamp)}
                 </div>
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1">
                   <span className="text-muted-foreground">Compra</span>

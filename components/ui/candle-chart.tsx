@@ -10,6 +10,14 @@ import type { DataRange } from "@/lib/data-range"
 const GREEN = "#22c55e"
 const RED = "#ef4444"
 
+const RANGE_TO_BCV_DAYS: Record<string, number> = {
+  "1sem": 7,
+  "1mes": 30,
+  "3meses": 90,
+  "1anio": 365,
+  "todo": 1825,
+}
+
 interface Candle {
   time: string
   open: number
@@ -29,7 +37,7 @@ const TIMEFRAMES = [
 
 function formatTime(timestamp: string, tf: string): string {
   const d = new Date(timestamp)
-  if (["24h", "8h", "4h"].includes(tf)) {
+  if (["24h", "8h", "4h", "1D"].includes(tf)) {
     return d.toLocaleDateString("es-VE", { day: "2-digit", month: "short" })
   }
   return d.toLocaleTimeString("es-VE", { hour: "2-digit", minute: "2-digit" })
@@ -40,7 +48,8 @@ function formatDate(timestamp: string): string {
   return d.toLocaleDateString("es-VE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
 }
 
-export function CandleChart({ className, range }: { className?: string; range: DataRange }) {
+export function CandleChart({ className, source, range }: { className?: string; source?: "p2p" | "bcv"; range: DataRange }) {
+  const src = source ?? "p2p"
   const [timeframe, setTimeframe] = useState("1h")
   const [candles, setCandles] = useState<Candle[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -93,7 +102,13 @@ export function CandleChart({ className, range }: { className?: string; range: D
         return res.json()
       })
       .then((data) => {
-        const c = data.candles || []
+        const c = (data.candles || []).map((c: any) => ({
+          time: c.time,
+          open: Number(c.open),
+          high: Number(c.high),
+          low: Number(c.low),
+          close: Number(c.close),
+        }))
         setError(null)
         setCandles((prev) => {
           const z = zoomStateRef.current
@@ -121,13 +136,63 @@ export function CandleChart({ className, range }: { className?: string; range: D
     return controller
   }, [timeframe, range])
 
+  const fetchBcvCandles = useCallback(() => {
+    const controller = new AbortController()
+    const days = RANGE_TO_BCV_DAYS[range.id] ?? 90
+    fetch(`/api/bcv/candles?days=${days}`, { signal: controller.signal })
+      .then((res) => {
+        if (!res.ok) throw new Error("Error cargando velas BCV")
+        return res.json()
+      })
+      .then((data) => {
+        const c: Candle[] = data.candles || []
+        if (c.length === 0) {
+          setError("No hay datos BCV para este periodo")
+          setIsLoading(false)
+          return
+        }
+        setError(null)
+        setCandles((prev) => {
+          const z = zoomStateRef.current
+          const prevLen = prev.length > 0 ? prev.length : z.total
+          if (prevLen > 0) {
+            const ratio = z.viewEnd - z.viewStart > 0 ? (z.viewEnd - z.viewStart) / prevLen : 1
+            const newViewLen = Math.max(5, Math.round(ratio * c.length))
+            const newStart = Math.max(0, Math.round((z.viewStart / prevLen) * c.length))
+            setViewStart(newStart)
+            setViewEnd(Math.min(c.length, newStart + newViewLen))
+          } else {
+            setViewStart(0)
+            setViewEnd(c.length)
+          }
+          return c
+        })
+        setIsLoading(false)
+      })
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          setError(err.message)
+          setIsLoading(false)
+        }
+      })
+    return controller
+  }, [range])
+
   useEffect(() => {
+    if (src === "bcv") {
+      setIsLoading(true)
+      setError(null)
+      setCandles([])
+      const controller = fetchBcvCandles()
+      const interval = setInterval(fetchBcvCandles, 900000)
+      return () => { controller.abort(); clearInterval(interval) }
+    }
     setIsLoading(true)
     setError(null)
     const controller = fetchCandles()
     const interval = setInterval(fetchCandles, 900000)
     return () => { controller.abort(); clearInterval(interval) }
-  }, [fetchCandles])
+  }, [src === "bcv" ? "bcv" : "p2p", fetchCandles, fetchBcvCandles])
 
   const visibleCandles = useMemo(() => {
     return candles.slice(Math.max(0, viewStart), viewEnd)
@@ -224,7 +289,7 @@ export function CandleChart({ className, range }: { className?: string; range: D
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <ChartCandlestick className="h-4 w-4 text-muted-foreground" />
-            Velas Japonesas
+            {src === "bcv" ? "Velas BCV" : "Velas Japonesas"}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0"><Skeleton className="h-[350px] w-full rounded-xl" /></CardContent>
@@ -238,11 +303,11 @@ export function CandleChart({ className, range }: { className?: string; range: D
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <ChartCandlestick className="h-4 w-4 text-muted-foreground" />
-            Velas Japonesas
+            {src === "bcv" ? "Velas BCV" : "Velas Japonesas"}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="h-[350px] flex items-center justify-center text-sm text-red-500">Error: {error}</div>
+          <div className="h-[350px] flex items-center justify-center text-sm text-muted-foreground">{error}</div>
         </CardContent>
       </Card>
     )
@@ -255,10 +320,12 @@ export function CandleChart({ className, range }: { className?: string; range: D
           <div>
             <CardTitle className="flex items-center gap-2 text-base">
               <ChartCandlestick className="h-4 w-4 text-muted-foreground" />
-              Velas Japonesas
+              {src === "bcv" ? "Velas BCV" : "Velas Japonesas"}
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {visibleCandles.length} de {candles.length} velas · {timeframe}
+              {src === "bcv"
+                ? `${visibleCandles.length} de ${candles.length} velas · 1D`
+                : `${visibleCandles.length} de ${candles.length} velas · ${timeframe}`}
             </p>
           </div>
           {latest && (
@@ -282,29 +349,37 @@ export function CandleChart({ className, range }: { className?: string; range: D
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="flex items-center gap-0.5 p-1 bg-muted/50 rounded-lg overflow-x-auto mb-4">
-          {TIMEFRAMES.map((tf, i) => {
-            const isActive = timeframe === tf.value
-            const showDivider =
-              (i > 0 && tf.group !== TIMEFRAMES[i - 1].group)
-            return (
-              <span key={tf.value} className="flex items-center">
-                {showDivider && <span className="w-px h-4 bg-border mx-1" />}
-                <button
-                  onClick={() => setTimeframe(tf.value)}
-                  className={cn(
-                    "relative px-2.5 py-1.5 text-xs font-medium rounded-md transition-all duration-200",
-                    isActive
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  )}
-                >
-                  {tf.label}
-                </button>
-              </span>
-            )
-          })}
-        </div>
+        {src === "bcv" ? (
+          <div className="flex items-center gap-0.5 p-1 mb-4">
+            <span className="px-2.5 py-1.5 text-xs font-medium rounded-md bg-background text-foreground shadow-sm">
+              1D
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-0.5 p-1 bg-muted/50 rounded-lg overflow-x-auto mb-4">
+            {TIMEFRAMES.map((tf, i) => {
+              const isActive = timeframe === tf.value
+              const showDivider =
+                (i > 0 && tf.group !== TIMEFRAMES[i - 1].group)
+              return (
+                <span key={tf.value} className="flex items-center">
+                  {showDivider && <span className="w-px h-4 bg-border mx-1" />}
+                  <button
+                    onClick={() => setTimeframe(tf.value)}
+                    className={cn(
+                      "relative px-2.5 py-1.5 text-xs font-medium rounded-md transition-all duration-200",
+                      isActive
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    )}
+                  >
+                    {tf.label}
+                  </button>
+                </span>
+              )
+            })}
+          </div>
+        )}
 
         {visibleCandles.length === 0 ? (
           <div className="h-[350px] flex items-center justify-center text-muted-foreground">
@@ -339,7 +414,7 @@ export function CandleChart({ className, range }: { className?: string; range: D
                 const x = PAD.left + i * gap + gap / 2
                 return (
                   <text key={i} x={x} y={H - 10} fill="#9ca3af" fontSize={10} textAnchor="middle">
-                    {formatTime(c.time, timeframe)}
+                    {formatTime(c.time, src === "bcv" ? "1D" : timeframe)}
                   </text>
                 )
               })}

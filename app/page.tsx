@@ -37,6 +37,7 @@ type Section = "overview" | "exchanges" | "analisis" | "config"
 export default function Home() {
   const [currentSection, setCurrentSection] = useState<Section>("overview")
   const [range, setRange] = useState<DataRange>(DEFAULT_RANGE)
+  const [source, setSource] = useState<"p2p" | "bcv">("p2p")
 
   const {
     data,
@@ -93,21 +94,26 @@ export default function Home() {
       case "analisis":
         return (
           <div className="space-y-6">
-            <DataRangeSelector range={range} onRangeChange={setRange} />
-            <TrendChart range={range} />
-            <CandleChart range={range} />
-            <AlgorithmPanel metrics={metrics} isLoading={isLoading} range={range} />
+            <div className="flex flex-wrap items-center gap-2">
+              <DataRangeSelector range={range} onRangeChange={setRange} />
+              <SourceToggle source={source} onSourceChange={setSource} />
+            </div>
+            <TrendChart source={source} range={range} />
+            <CandleChart source={source} range={range} />
+            <AlgorithmPanel source={source} metrics={metrics} isLoading={isLoading} range={range} />
             <BcvTable />
-            <PriceProjection
-              advertisements={(data?.rates || []).map((rate) => ({
-                price: rate.bid,
-                available: 1,
-                orderCount: 0,
-                advertiser: { nickName: rate.name, monthOrderCount: 0 },
-              }))}
-              tradeType="SELL"
-              isLoading={isLoading}
-            />
+            {source !== "bcv" && (
+              <PriceProjection
+                advertisements={(data?.rates || []).map((rate) => ({
+                  price: rate.bid,
+                  available: 1,
+                  orderCount: 0,
+                  advertiser: { nickName: rate.name, monthOrderCount: 0 },
+                }))}
+                tradeType="SELL"
+                isLoading={isLoading}
+              />
+            )}
           </div>
         )
       case "config":
@@ -186,6 +192,39 @@ function DataRangeSelector({
           {option.label}
         </button>
       ))}
+    </div>
+  )
+}
+
+function SourceToggle({
+  source,
+  onSourceChange,
+}: {
+  source: "p2p" | "bcv"
+  onSourceChange: (source: "p2p" | "bcv") => void
+}) {
+  return (
+    <div className="flex gap-1 p-1 bg-muted rounded-lg w-fit">
+      <button
+        onClick={() => onSourceChange("p2p")}
+        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+          source === "p2p"
+            ? "bg-background text-foreground shadow-sm"
+            : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+        }`}
+      >
+        P2P
+      </button>
+      <button
+        onClick={() => onSourceChange("bcv")}
+        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+          source === "bcv"
+            ? "bg-background text-foreground shadow-sm"
+            : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+        }`}
+      >
+        BCV
+      </button>
     </div>
   )
 }

@@ -42,6 +42,15 @@ interface AlgorithmPanelProps {
   metrics: AlgorithmMetrics
   isLoading: boolean
   range: DataRange
+  source?: "p2p" | "bcv"
+}
+
+const RANGE_TO_BCV_DAYS: Record<string, number> = {
+  "1sem": 7,
+  "1mes": 30,
+  "3meses": 90,
+  "1anio": 365,
+  "todo": 1825,
 }
 
 function formatExchangeName(name: string): string {
@@ -65,7 +74,8 @@ function formatPrice(price: number): string {
   })
 }
 
-export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProps) {
+export function AlgorithmPanel({ metrics, isLoading, range, source }: AlgorithmPanelProps) {
+  const src = source ?? "p2p"
   const [analysis, setAnalysis] = useState({
     rsi: 50,
     ma5: 0,
@@ -79,45 +89,79 @@ export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProp
   // Fetch candle data for RSI/MA analysis (auto-refresh every 60s)
   useEffect(() => {
     let controller = new AbortController()
+    const isBcv = src === "bcv"
+
+    const performAnalysis = (candles: Candle[]) => {
+      const closes = candles.map((c) => c.close)
+      const rsi = calculateRSI(closes, 14)
+      const ma5 = calculateMA(closes, 5)
+      const ma20 = calculateMA(closes, 20)
+      let scenario = "Lateral"
+      if (rsi > 70 && ma5 > ma20) scenario = "Posible correccion bajista (Sobrecompra)"
+      else if (rsi > 70 && ma5 < ma20) scenario = "Sobrecompra sin impulso (Agotamiento)"
+      else if (rsi < 30 && ma5 < ma20) scenario = "Posible rebote alcista (Sobreventa)"
+      else if (ma5 > ma20) scenario = "Tendencia Alcista"
+      else if (ma5 < ma20) scenario = "Tendencia Bajista"
+
+      setAnalysis({ rsi, ma5, ma20, scenario })
+      setAnalysisError(null)
+    }
 
     const fetchData = () => {
       controller.abort()
       controller = new AbortController()
 
-      fetch(`/api/candles?timeframe=1h&limit=${range.limit ?? 50000}`, { signal: controller.signal })
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`)
-          return res.json()
-        })
-        .then((data: { candles: Candle[] }) => {
-          const closes = data.candles.map((c) => c.close)
-          const rsi = calculateRSI(closes, 14)
-          const ma5 = calculateMA(closes, 5)
-          const ma20 = calculateMA(closes, 20)
-          let scenario = "Lateral"
-          if (rsi > 70 && ma5 > ma20) scenario = "Posible correccion bajista (Sobrecompra)"
-          else if (rsi > 70 && ma5 < ma20) scenario = "Sobrecompra sin impulso (Agotamiento)"
-          else if (rsi < 30 && ma5 < ma20) scenario = "Posible rebote alcista (Sobreventa)"
-          else if (ma5 > ma20) scenario = "Tendencia Alcista"
-          else if (ma5 < ma20) scenario = "Tendencia Bajista"
-
-          setAnalysis({ rsi, ma5, ma20, scenario })
-          setAnalysisError(null)
-        })
-        .catch((err) => {
-          if (err.name !== "AbortError") {
-            setAnalysisError("No se pudo cargar el analisis tecnico")
-          }
-        })
+      if (isBcv) {
+        const days = RANGE_TO_BCV_DAYS[range.id] ?? 90
+        fetch(`/api/bcv/candles?days=${days}`, { signal: controller.signal })
+          .then((res) => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`)
+            return res.json()
+          })
+          .then((data: { success: boolean; candles: Array<{ time: string; open: number; high: number; low: number; close: number }> }) => {
+            if (data.success && data.candles?.length) {
+              const mapped: Candle[] = data.candles.map((c) => ({
+                time: new Date(c.time).getTime(),
+                open: Number(c.open),
+                high: Number(c.high),
+                low: Number(c.low),
+                close: Number(c.close),
+              }))
+              performAnalysis(mapped)
+            } else {
+              setAnalysisError("No se pudo cargar el analisis tecnico")
+            }
+          })
+          .catch((err) => {
+            if (err.name !== "AbortError") {
+              setAnalysisError("No se pudo cargar el analisis tecnico")
+            }
+          })
+      } else {
+        fetch(`/api/candles?timeframe=1h&limit=${range.limit ?? 50000}`, { signal: controller.signal })
+          .then((res) => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`)
+            return res.json()
+          })
+          .then((data: { candles: Candle[] }) => {
+            performAnalysis(data.candles)
+          })
+          .catch((err) => {
+            if (err.name !== "AbortError") {
+              setAnalysisError("No se pudo cargar el analisis tecnico")
+            }
+          })
+      }
     }
 
     fetchData()
     const interval = setInterval(fetchData, 900000)
     return () => { controller.abort(); clearInterval(interval) }
-  }, [range])
+  }, [range, src])
 
   // Fetch historical data stats (auto-refresh every 60s)
   useEffect(() => {
+    if (src === "bcv") return
     let controller = new AbortController()
 
     const fetchData = () => {
@@ -218,14 +262,18 @@ export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProp
     overallSignal = "Sobreventa"
     signalColor = "text-green-600 dark:text-green-400"
     signalIcon = <Target className="h-4 w-4" />
-  } else if (analysis.ma5 > analysis.ma20 && metrics.trend === "up") {
-    overallSignal = "Alcista"
-    signalColor = "text-green-600 dark:text-green-400"
-    signalIcon = <TrendingUp className="h-4 w-4" />
-  } else if (analysis.ma5 < analysis.ma20 && metrics.trend === "down") {
-    overallSignal = "Bajista"
-    signalColor = "text-red-600 dark:text-red-400"
-    signalIcon = <TrendingDown className="h-4 w-4" />
+  } else if (analysis.ma5 > analysis.ma20) {
+    if (src === "bcv" || metrics.trend === "up") {
+      overallSignal = "Alcista"
+      signalColor = "text-green-600 dark:text-green-400"
+      signalIcon = <TrendingUp className="h-4 w-4" />
+    }
+  } else if (analysis.ma5 < analysis.ma20) {
+    if (src === "bcv" || metrics.trend === "down") {
+      overallSignal = "Bajista"
+      signalColor = "text-red-600 dark:text-red-400"
+      signalIcon = <TrendingDown className="h-4 w-4" />
+    }
   }
 
   const metricCard = (icon: React.ReactNode, label: string, value: string, color: string, sub: string) => (
@@ -247,7 +295,9 @@ export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProp
           Analisis Algoritmico
         </CardTitle>
         <CardDescription className="text-xs">
-          {historyStats
+          {src === "bcv"
+            ? "Indicadores calculados sobre tasa BCV diaria"
+            : historyStats
             ? `${historyStats.totalSnapshots} snapshots guardados en Supabase`
             : "Cargando datos historicos..."}
         </CardDescription>
@@ -255,6 +305,7 @@ export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProp
 
       <CardContent className="space-y-4 pt-0">
         {/* ─── Corto plazo · 5 min ─── */}
+        {src !== "bcv" && (
         <div>
           <div className="flex items-center gap-2 mb-2.5">
             <Clock className="h-3.5 w-3.5 text-muted-foreground" />
@@ -291,12 +342,13 @@ export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProp
             )}
           </div>
         </div>
+        )}
 
         {/* ─── Medio plazo · 1h ─── */}
         <div>
           <div className="flex items-center gap-2 mb-2.5">
             <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Medio plazo · 1h</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{src === "bcv" ? "Medio plazo · 1 dia" : "Medio plazo · 1h"}</span>
           </div>
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
             {metricCard(
@@ -318,19 +370,19 @@ export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProp
               "Escenario",
               analysis.scenario,
               "text-foreground",
-              "Proximas horas"
+              src === "bcv" ? "Tasa oficial diaria" : "Proximas horas"
             )}
             {metricCard(
               signalIcon,
               "Senal General",
               overallSignal,
               signalColor,
-              metrics.volatility < 1 ? "Baja liquidacion — senal atenuada" : ""
+              src === "bcv" ? "" : (metrics.volatility < 1 ? "Baja liquidacion — senal atenuada" : "")
             )}
           </div>
         </div>
 
-        {historyStats && (
+        {src !== "bcv" && historyStats && (
           <div className="p-4 rounded-xl border bg-gradient-to-b from-card to-muted/20">
             <div className="flex items-center gap-2 mb-3">
               <Database className="h-3.5 w-3.5 text-muted-foreground" />
@@ -363,7 +415,7 @@ export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProp
           </div>
         )}
 
-        {dataError && (
+        {src !== "bcv" && dataError && (
           <div className="p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-xs text-yellow-700 dark:text-yellow-300">
             {dataError}
           </div>
@@ -375,7 +427,7 @@ export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProp
           </div>
         )}
 
-        {metrics.arbitrage && metrics.arbitrage.profitPercent > 0 && (
+        {src !== "bcv" && metrics.arbitrage && metrics.arbitrage.profitPercent > 0 && (
           <div className="relative overflow-hidden rounded-xl border bg-green-500/10 border-green-500/30 p-4">
             <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-green-500 to-emerald-400" />
             <div className="flex items-center gap-2 mb-2">
@@ -402,7 +454,7 @@ export function AlgorithmPanel({ metrics, isLoading, range }: AlgorithmPanelProp
           </div>
         )}
 
-        {(!metrics.arbitrage || metrics.arbitrage.profitPercent <= 0) && (
+        {src !== "bcv" && (!metrics.arbitrage || metrics.arbitrage.profitPercent <= 0) && (
           <div className="p-4 rounded-xl border bg-muted/30 text-center">
             <p className="text-xs text-muted-foreground">
               No hay oportunidad de arbitraje significativa en este momento

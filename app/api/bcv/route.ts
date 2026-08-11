@@ -39,12 +39,29 @@ export async function GET(request: Request) {
 
     if (history) {
       const parsedDays = parseInt(searchParams.get("days") || "90")
-      const days = Number.isFinite(parsedDays) ? Math.min(Math.max(parsedDays, 1), 365) : 90
+      const days = Number.isFinite(parsedDays) ? Math.min(Math.max(parsedDays, 1), 2000) : 90
 
-      const rows = await supabaseRest<BcvAnalysisRow[]>("rpc/get_bcv_analysis", {
-        method: "POST",
-        body: { p_days: days },
-      })
+      async function fetchBcvAnalysisPaginated(pDays: number): Promise<BcvAnalysisRow[]> {
+        let allRows: BcvAnalysisRow[] = []
+        let offset = 0
+        const limit = 1000
+
+        while (true) {
+          const page = await supabaseRest<BcvAnalysisRow[]>("rpc/get_bcv_analysis", {
+            method: "POST",
+            body: { p_days: pDays },
+            query: { limit: String(limit), offset: String(offset) },
+          })
+          if (!page || page.length === 0) break
+          allRows = allRows.concat(page)
+          if (page.length < limit) break
+          offset += limit
+        }
+
+        return allRows
+      }
+
+      const rows = await fetchBcvAnalysisPaginated(days)
 
       const data = (rows ?? []).map((row) => {
         const usd_ves = Number(row.usd_ves)
