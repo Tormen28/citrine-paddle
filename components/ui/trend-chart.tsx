@@ -103,12 +103,14 @@ export function TrendChart({ source, range }: { source?: "p2p" | "bcv"; range: D
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.data && data.data.length > 0) {
-          const bcvRows: SnapshotRow[] = data.data.map((row: { date: string; usd_ves: number }) => ({
-            time: Math.floor(new Date(row.date).getTime() / 1000),
-            buyPrice: row.usd_ves,
-            sellPrice: row.usd_ves,
-            spread: 0,
-          }))
+          const bcvRows: SnapshotRow[] = [...data.data]
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+            .map((row: { date: string; usd_ves: number }) => ({
+              time: Math.floor(new Date(row.date).getTime() / 1000),
+              buyPrice: row.usd_ves,
+              sellPrice: row.usd_ves,
+              spread: 0,
+            }))
           setHistory((prev) => {
             const z = zoomStateRef.current
             const prevLen = prev.length > 0 ? prev.length : z.total

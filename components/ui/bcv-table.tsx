@@ -97,7 +97,7 @@ export function BcvTable() {
                     <td className="py-2.5 px-2 text-xs">{formatDate(row.date)}</td>
                     <td className="text-right py-2.5 px-2 tabular-nums">{formatPrice(row.usd_ves)}</td>
                     <td className="text-right py-2.5 px-2 tabular-nums">
-                      {row.p2p !== null ? formatPrice(row.p2p) : "—"}
+                      {row.p2p !== null ? formatPrice(row.p2p) : ""}
                     </td>
                     <td className="text-right py-2.5 px-2">
                       {row.brecha !== null ? (
@@ -114,7 +114,7 @@ export function BcvTable() {
                           {row.brecha.toFixed(2)}%
                         </span>
                       ) : (
-                        "—"
+                        ""
                       )}
                     </td>
                   </tr>
