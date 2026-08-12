@@ -131,7 +131,7 @@ export function InstallPrompt() {
       <div
         role="dialog"
         aria-label="Instalar aplicacion"
-        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[85] w-[calc(100%-2rem)] max-w-md animate-fade-in-up"
+        className="fixed top-4 left-1/2 -translate-x-1/2 z-[85] w-[calc(100%-2rem)] max-w-md animate-fade-in-down"
       >
         <div className="rounded-2xl border bg-background/95 backdrop-blur p-4 shadow-2xl shadow-black/40">
           <div className="flex items-start gap-3">
@@ -181,7 +181,7 @@ export function InstallPrompt() {
     <div
       role="dialog"
       aria-label="Instalar aplicacion"
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[85] w-[calc(100%-2rem)] max-w-md animate-fade-in-up"
+      className="fixed top-4 left-1/2 -translate-x-1/2 z-[85] w-[calc(100%-2rem)] max-w-md animate-fade-in-down"
     >
       <div className="rounded-2xl border bg-background/95 backdrop-blur p-4 shadow-2xl shadow-black/40">
         <div className="flex items-center gap-3">

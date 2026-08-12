@@ -203,6 +203,17 @@ input::placeholder {
   }
 }
 
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes section-enter {
   from {
     opacity: 0;
@@ -217,6 +228,10 @@ input::placeholder {
 @media (prefers-reduced-motion: no-preference) {
   .animate-fade-in-up {
     animation: fade-in-up 0.4s ease-out both;
+  }
+
+  .animate-fade-in-down {
+    animation: fade-in-down 0.4s ease-out both;
   }
 
   .animate-section-enter {
