@@ -58,7 +58,10 @@ export function InstallPrompt() {
     if (isStandalone()) return
 
     const stored = getStored()
-    if (stored === "accepted" || stored === "dismissed") return
+    // "accepted" no debe suprimir el letrero para siempre porque si el usuario desinstala la app,
+    // Chrome vuelve a disparar beforeinstallprompt en la siguiente visita y el letrero debe poder reaparecer;
+    // mientras la app esta instalada Chrome no dispara beforeinstallprompt de todos modos, asi que no hay riesgo de molestar.
+    if (stored === "dismissed") return
 
     const ios = isIOSDevice()
     setIsIOS(ios)
