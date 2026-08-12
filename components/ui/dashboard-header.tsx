@@ -99,8 +99,9 @@ export function DashboardHeader({
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8"
+            className="h-8 w-8 hover:bg-muted active:scale-[0.95]"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            aria-label="Cambiar tema"
           >
             <Sun className="h-3.5 w-3.5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-3.5 w-3.5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -110,15 +111,16 @@ export function DashboardHeader({
           <Button
             variant="outline"
             size="icon"
-            className="h-8 w-8"
+            className="h-8 w-8 hover:bg-muted active:scale-[0.95]"
             onClick={onRefresh}
             disabled={isLoading}
+            aria-label="Refrescar datos"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
           </Button>
 
           {alertCount > 0 && (
-            <Button variant="outline" size="icon" className="h-8 w-8 relative">
+            <Button variant="outline" size="icon" className="h-8 w-8 relative hover:bg-muted active:scale-[0.95]" aria-label={`${alertCount} alertas`}>
               <Bell className="h-3.5 w-3.5" />
               <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center shadow-sm shadow-red-500/30">
                 {alertCount}
@@ -134,7 +136,7 @@ export function DashboardHeader({
           <button
             key={section.id}
             onClick={() => onSectionChange(section.id)}
-            className={`relative px-4 py-2 rounded-xl text-xs font-medium transition-all duration-200 whitespace-nowrap ${
+            className={`relative px-4 py-2 rounded-xl text-xs font-medium transition-all duration-200 active:scale-[0.97] whitespace-nowrap ${
               currentSection === section.id
                 ? "brand-gradient text-white shadow-sm brand-shadow"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted"

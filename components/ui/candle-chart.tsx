@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ChartCandlestick } from "lucide-react"
+import { ChartCandlestick, ZoomIn, ZoomOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { DataRange } from "@/lib/data-range"
 
@@ -63,6 +63,7 @@ export function CandleChart({ className, source, range }: { className?: string; 
   const containerRef = useRef<HTMLDivElement>(null)
   const isDragging = useRef(false)
   const lastMouseX = useRef(0)
+  const touchDistance = useRef(0)
 
   const zoomStateRef = useRef({ viewStart: 0, viewEnd: 0, total: 0 })
 
@@ -228,14 +229,31 @@ export function CandleChart({ className, source, range }: { className?: string; 
   const gap = chartW / (visibleCandles.length || 1)
   const candleW = Math.max(Math.floor(gap * 0.6), 3)
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  const zoomStep = useCallback((direction: "in" | "out") => {
+    const s = zoomStateRef.current
+    const current = s.viewEnd - s.viewStart
+    if (current < 3) return
+    const step = Math.max(1, Math.floor(current * 0.15))
+    const center = Math.floor((s.viewStart + s.viewEnd) / 2)
+    const newLen = Math.max(5, current + (direction === "in" ? step : -step))
+    const ns = Math.max(0, center - Math.floor(newLen / 2))
+    const ne = Math.min(s.total, center + Math.ceil(newLen / 2))
+    setViewStart(ns)
+    setViewEnd(ne)
+  }, [])
+
+  const isZoomedOut = viewStart === 0 && viewEnd === candles.length
+  const isZoomedIn = viewEnd - viewStart <= 5
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
     isDragging.current = true
     setIsDraggingState(true)
     lastMouseX.current = e.clientX
+    touchDistance.current = 0
     e.preventDefault()
   }, [])
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     const svg = svgRef.current
     if (!svg) return
     const rect = svg.getBoundingClientRect()
@@ -247,6 +265,7 @@ export function CandleChart({ className, source, range }: { className?: string; 
     if (isDragging.current) {
       const dx = e.clientX - lastMouseX.current
       lastMouseX.current = e.clientX
+      touchDistance.current += Math.abs(dx)
       const candlePixels = (chartW * (rect.width / W)) / (current || 1)
       const candleDelta = Math.round(-dx / candlePixels)
       if (candleDelta !== 0) {
@@ -258,6 +277,8 @@ export function CandleChart({ className, source, range }: { className?: string; 
       return
     }
 
+    if (e.pointerType === "touch") return
+
     const svgX = (relX / rect.width) * W
     const idx = Math.floor((svgX - PAD.left) / gap)
     if (idx >= 0 && idx < visibleCandles.length) {
@@ -267,12 +288,23 @@ export function CandleChart({ className, source, range }: { className?: string; 
     }
   }, [viewStart, viewEnd, gap, visibleCandles.length, candles.length, chartW])
 
-  const handleMouseUp = useCallback(() => {
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    if (isDragging.current && e.pointerType === "touch" && touchDistance.current < 8) {
+      const svg = svgRef.current
+      if (svg) {
+        const rect = svg.getBoundingClientRect()
+        const svgX = ((e.clientX - rect.left) / rect.width) * W
+        const idx = Math.floor((svgX - PAD.left) / gap)
+        if (idx >= 0 && idx < visibleCandles.length) {
+          setHoverIdx(idx)
+        }
+      }
+    }
     isDragging.current = false
     setIsDraggingState(false)
-  }, [])
+  }, [gap, visibleCandles.length])
 
-  const handleMouseLeave = useCallback(() => {
+  const handlePointerLeave = useCallback(() => {
     isDragging.current = false
     setIsDraggingState(false)
     setHoverIdx(null)
@@ -367,7 +399,7 @@ export function CandleChart({ className, source, range }: { className?: string; 
                   <button
                     onClick={() => setTimeframe(tf.value)}
                     className={cn(
-                      "relative px-2.5 py-1.5 text-xs font-medium rounded-md transition-all duration-200",
+                      "relative px-3 py-2 text-xs font-medium rounded-md transition-all duration-200 active:scale-[0.97]",
                       isActive
                         ? "bg-background text-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -389,12 +421,30 @@ export function CandleChart({ className, source, range }: { className?: string; 
           <div
             ref={containerRef}
             className="relative rounded-xl border bg-card/50 overflow-hidden shadow-inner"
-            style={{ cursor: isDraggingState ? "grabbing" : "crosshair" }}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseLeave}
+            style={{ cursor: isDraggingState ? "grabbing" : "crosshair", touchAction: "none" }}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerLeave}
           >
+            <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
+              <button
+                onClick={() => zoomStep("in")}
+                disabled={isZoomedOut}
+                className="flex items-center justify-center w-9 h-9 rounded-lg bg-background/90 border shadow-sm backdrop-blur-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                aria-label="Acercar zoom"
+              >
+                <ZoomIn className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => zoomStep("out")}
+                disabled={isZoomedIn}
+                className="flex items-center justify-center w-9 h-9 rounded-lg bg-background/90 border shadow-sm backdrop-blur-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                aria-label="Alejar zoom"
+              >
+                <ZoomOut className="h-4 w-4" />
+              </button>
+            </div>
             <svg
               ref={svgRef}
               viewBox={`0 0 ${W} ${H}`}
@@ -487,7 +537,7 @@ export function CandleChart({ className, source, range }: { className?: string; 
             </div>
           </div>
           <span className="text-[10px] text-muted-foreground/60">
-            Rueda para zoom · Arrastra para navegar
+            Arrastra para navegar · Botones +/− para zoom
           </span>
         </div>
       </CardContent>

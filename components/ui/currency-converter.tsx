@@ -4,6 +4,7 @@ import { useState, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowRightLeft, Percent } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { CopyButton } from "@/components/ui/copy-button"
 
 interface CurrencyConverterProps {
   avgPrice: number
@@ -71,7 +72,7 @@ export function CurrencyConverter({ avgPrice, bcvRate, brecha }: CurrencyConvert
               <button
                 onClick={() => setUnit("bs")}
                 className={cn(
-                  "px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200",
+                  "px-4 py-2 rounded-md text-xs font-medium transition-all duration-200 active:scale-[0.97]",
                   unit === "bs"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -82,7 +83,7 @@ export function CurrencyConverter({ avgPrice, bcvRate, brecha }: CurrencyConvert
               <button
                 onClick={() => setUnit("usd")}
                 className={cn(
-                  "px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200",
+                  "px-4 py-2 rounded-md text-xs font-medium transition-all duration-200 active:scale-[0.97]",
                   unit === "usd"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -152,7 +153,7 @@ export function CurrencyConverter({ avgPrice, bcvRate, brecha }: CurrencyConvert
               <button
                 onClick={() => setCommissionActive(!commissionActive)}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200",
+                  "flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium border transition-all duration-200 active:scale-[0.97]",
                   commissionActive
                     ? "bg-amber-500/15 border-amber-500/40 text-amber-700 dark:text-amber-300"
                     : "bg-muted/30 border-border text-muted-foreground hover:border-amber-500/30 hover:text-amber-700 dark:hover:text-amber-300"
@@ -204,23 +205,31 @@ function ResultRow({
   commissionPct?: number
   currency?: string
 }) {
+  const copyText =
+    netValue !== null && netValue !== undefined
+      ? `${formatNumber(value)} ${currency} neto ${formatNumber(netValue)} ${currency}`
+      : `${formatNumber(value)} ${currency}`
+
   return (
     <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/30">
       <span className="text-xs text-muted-foreground">{label}</span>
-      <div className="text-right">
-        <span
-          className={cn(
-            "text-sm font-semibold tabular-nums",
-            secondary ? "text-muted-foreground" : "text-foreground"
-          )}
-        >
-          {formatNumber(value)} {currency}
-        </span>
-        {commissionActive && netValue !== null && netValue !== undefined && (
-          <span className="ml-2 text-xs font-medium text-amber-600 dark:text-amber-400">
-            neto {formatNumber(netValue)} {currency}
+      <div className="flex items-center gap-2">
+        <div className="text-right">
+          <span
+            className={cn(
+              "text-sm font-semibold tabular-nums",
+              secondary ? "text-muted-foreground" : "text-foreground"
+            )}
+          >
+            {formatNumber(value)} {currency}
           </span>
-        )}
+          {commissionActive && netValue !== null && netValue !== undefined && (
+            <span className="ml-2 text-xs font-medium text-amber-600 dark:text-amber-400">
+              neto {formatNumber(netValue)} {currency}
+            </span>
+          )}
+        </div>
+        <CopyButton value={copyText} label={`Copiar ${label}`} />
       </div>
     </div>
   )

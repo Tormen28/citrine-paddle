@@ -3,14 +3,14 @@
 import { useState, useEffect, useRef } from "react"
 
 export function useCountUp(target: number, duration = 700): number {
-  const [value, setValue] = useState(target)
-  const prevTarget = useRef(target)
+  const [value, setValue] = useState(0)
+  const prevTarget = useRef<number | null>(null)
   const frameRef = useRef<number>(0)
 
   useEffect(() => {
-    if (target === prevTarget.current) return
+    if (prevTarget.current !== null && target === prevTarget.current) return
 
-    const startValue = prevTarget.current
+    const startValue = prevTarget.current === null ? 0 : prevTarget.current
     const diff = target - startValue
     const startTime = performance.now()
 

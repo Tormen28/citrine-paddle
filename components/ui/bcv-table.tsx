@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useBcv } from "@/hooks/use-bcv"
@@ -21,6 +22,8 @@ function formatDate(dateStr: string): string {
 
 export function BcvTable() {
   const { latest, history, isLoading } = useBcv()
+  const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
 
   const rows =
     history.length > 0
@@ -35,6 +38,11 @@ export function BcvTable() {
           },
         ]
       : []
+
+  const totalRows = rows.length
+  const pageCount = Math.max(1, Math.ceil(totalRows / pageSize))
+  const safePage = Math.min(page, pageCount - 1)
+  const visibleRows = rows.slice(safePage * pageSize, safePage * pageSize + pageSize)
 
   return (
     <Card>
@@ -92,8 +100,8 @@ export function BcvTable() {
                   </td>
                 </tr>
               ) : (
-                rows.map((row, i) => (
-                  <tr key={i} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                visibleRows.map((row, i) => (
+                  <tr key={safePage * pageSize + i} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                     <td className="py-2.5 px-2 text-xs">{formatDate(row.date)}</td>
                     <td className="text-right py-2.5 px-2 tabular-nums">{formatPrice(row.usd_ves)}</td>
                     <td className="text-right py-2.5 px-2 tabular-nums">
@@ -123,6 +131,68 @@ export function BcvTable() {
             </tbody>
           </table>
         </div>
+
+        {totalRows > 10 && (
+          <div className="flex items-center justify-between gap-2 pt-2 flex-wrap">
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                disabled={safePage === 0}
+                onClick={() => setPage(0)}
+                className="rounded-lg border px-2 py-1.5 text-xs font-medium transition-all duration-200 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none"
+              >
+                «
+              </button>
+              <button
+                type="button"
+                disabled={safePage === 0}
+                onClick={() => setPage(safePage - 1)}
+                className="rounded-lg border px-3 py-1.5 text-xs font-medium transition-all duration-200 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none"
+              >
+                Anterior
+              </button>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              Página {safePage + 1} de {pageCount}
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                disabled={safePage >= pageCount - 1}
+                onClick={() => setPage(safePage + 1)}
+                className="rounded-lg border px-3 py-1.5 text-xs font-medium transition-all duration-200 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none"
+              >
+                Siguiente
+              </button>
+              <button
+                type="button"
+                disabled={safePage >= pageCount - 1}
+                onClick={() => setPage(pageCount - 1)}
+                className="rounded-lg border px-2 py-1.5 text-xs font-medium transition-all duration-200 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none"
+              >
+                »
+              </button>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <label htmlFor="bcv-page-size" className="text-xs text-muted-foreground">
+                Filas:
+              </label>
+              <select
+                id="bcv-page-size"
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value))
+                  setPage(0)
+                }}
+                className="rounded-lg border px-2 py-1.5 text-xs font-medium bg-background"
+              >
+                <option value={10}>10</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

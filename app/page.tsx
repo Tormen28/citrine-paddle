@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { useMarketSummary, type MarketSummary } from "@/hooks/use-market-summary"
 import { DashboardHeader } from "@/components/ui/dashboard-header"
 import { ExchangeCard } from "@/components/ui/exchange-card"
@@ -31,6 +32,9 @@ import {
 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useCountUp } from "@/hooks/use-count-up"
+import { BrandSplash } from "@/components/brand-splash"
+import { OnboardingModal } from "@/components/onboarding-modal"
+import { CopyButton } from "@/components/ui/copy-button"
 
 type Section = "overview" | "exchanges" | "analisis" | "config"
 
@@ -38,6 +42,7 @@ export default function Home() {
   const [currentSection, setCurrentSection] = useState<Section>("overview")
   const [range, setRange] = useState<DataRange>(DEFAULT_RANGE)
   const [source, setSource] = useState<"p2p" | "bcv">("p2p")
+  const [showSplash, setShowSplash] = useState(true)
 
   const {
     data,
@@ -72,6 +77,20 @@ export default function Home() {
       document.title = "Ya Te Cambio — Dashboard P2P"
     }
   }, [data?.avgPrice])
+
+  useEffect(() => {
+    const minTime = 1200
+    const start = Date.now()
+    const timer = setTimeout(() => {
+      const elapsed = Date.now() - start
+      if (!isLoading && data) {
+        setShowSplash(false)
+      } else if (elapsed >= minTime) {
+        setShowSplash(false)
+      }
+    }, minTime)
+    return () => clearTimeout(timer)
+  }, [isLoading, data])
 
   const renderSection = () => {
     switch (currentSection) {
@@ -156,7 +175,7 @@ export default function Home() {
         </Alert>
       )}
 
-      <div key={currentSection} className="animate-fade-in-up">
+      <div key={currentSection} className="animate-section-enter">
         {renderSection()}
       </div>
 
@@ -166,6 +185,9 @@ export default function Home() {
           Ya Te Cambio · Ecosistema
         </span>
       </footer>
+
+      <OnboardingModal />
+      <BrandSplash visible={showSplash} />
     </main>
   )
 }
@@ -207,23 +229,23 @@ function SourceToggle({
     <div className="flex gap-1 p-1 bg-muted rounded-lg w-fit">
       <button
         onClick={() => onSourceChange("p2p")}
-        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
-          source === "p2p"
-            ? "bg-background text-foreground shadow-sm"
-            : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-        }`}
-      >
-        P2P
-      </button>
-      <button
-        onClick={() => onSourceChange("bcv")}
-        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
-          source === "bcv"
-            ? "bg-background text-foreground shadow-sm"
-            : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-        }`}
-      >
-        BCV
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 active:scale-[0.97] whitespace-nowrap ${
+            source === "p2p"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+          }`}
+        >
+          P2P
+        </button>
+        <button
+          onClick={() => onSourceChange("bcv")}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 active:scale-[0.97] whitespace-nowrap ${
+            source === "bcv"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+          }`}
+        >
+          BCV
       </button>
     </div>
   )
@@ -253,7 +275,7 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
               <Skeleton className="h-10 w-48" />
               <Skeleton className="h-4 w-56" />
             </div>
-            <div className="w-full lg:w-[45%]">
+          <div className="relative w-full lg:w-[45%]" style={{ animationDelay: "300ms" }}>
               <Skeleton className="h-16 w-full" />
             </div>
           </div>
@@ -282,10 +304,27 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
 
   if (error && !data) {
     return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <div className="animate-fade-in-up">
+        <div className="rounded-2xl border bg-card/50 p-8 text-center space-y-4">
+          <Image
+            src="/logo-yatecambio.png"
+            alt="Ya Te Cambio"
+            width={40}
+            height={40}
+            className="h-10 w-auto mx-auto opacity-80"
+          />
+          <h2 className="text-lg font-semibold">Sin conexión</h2>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+            No pudimos cargar las tasas. Revisa tu conexión y vuelve a intentarlo.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="brand-gradient text-white brand-shadow px-6 py-2.5 rounded-xl text-sm font-semibold"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
     )
   }
 
@@ -296,14 +335,24 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
 
   return (
     <div className="space-y-4">
-      <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-card to-muted/40 p-6">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+      <div className="animate-fade-in-up" style={{ animationDelay: "0ms" }}>
+        <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-card to-muted/40 p-6">
+          <div
+            className={`pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full blur-3xl opacity-20 ${
+              trend === "up"
+                ? "bg-green-500"
+                : trend === "down"
+                ? "bg-red-500"
+                : "bg-[#FF6811]"
+            }`}
+          />
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-sm font-medium text-muted-foreground">
               Dólar paralelo hoy
             </p>
-            <div className="mt-1 flex items-center gap-3 min-w-0">
-              <span className="text-3xl font-bold tabular-nums tracking-tight sm:text-4xl lg:text-5xl truncate transition-colors duration-700 animate-pulse-soft">
+            <div className="mt-1 flex items-center gap-3 min-w-0" style={{ animationDelay: "100ms" }}>
+              <span className="text-3xl font-bold tabular-nums tracking-tight sm:text-4xl lg:text-5xl truncate transition-colors duration-700 animate-pulse-soft drop-shadow-sm">
                 {animatedPrice.toLocaleString("es-VE", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
@@ -312,14 +361,23 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
                   VES
                 </span>
               </span>
-              <TrendBadge trend={trend} changePct={changePct} />
+              <span style={{ animationDelay: "200ms" }}>
+                <TrendBadge trend={trend} changePct={changePct} />
+              </span>
+              <CopyButton
+                value={`${animatedPrice.toLocaleString("es-VE", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })} VES`}
+                label="Copiar precio del dólar"
+              />
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
               Promedio en {exchangeCount} exchanges en vivo
             </p>
           </div>
 
-          <div className="w-full lg:w-[45%]">
+          <div className="relative w-full lg:w-[45%]" style={{ animationDelay: "300ms" }}>
             <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
               <span>Últimas 24 horas</span>
               <span
@@ -339,13 +397,25 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
           </div>
         </div>
       </div>
+      </div>
 
-      <MarketSummaryCard
+      <div className="animate-fade-in-up" style={{ animationDelay: "60ms" }}>
+        <CurrencyConverter
+        avgPrice={avgPrice}
+        bcvRate={bcvLatest?.usd_ves ?? 0}
+        brecha={bcvLatest?.brecha ?? null}
+      />
+      </div>
+
+      <div className="animate-fade-in-up" style={{ animationDelay: "120ms" }}>
+        <MarketSummaryCard
         summary={summary}
         avgPrice={avgPrice}
       />
+      </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="animate-fade-in-up" style={{ animationDelay: "180ms" }}>
+        <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
@@ -356,13 +426,22 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
           <CardContent>
             {bestAsk ? (
               <>
-                <span className="text-2xl font-bold tabular-nums">
-                  {bestAsk.price.toLocaleString("es-VE", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}{" "}
-                  VES
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold tabular-nums">
+                    {bestAsk.price.toLocaleString("es-VE", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    VES
+                  </span>
+                  <CopyButton
+                    value={`${bestAsk.price.toLocaleString("es-VE", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })} VES`}
+                    label="Copiar precio de compra"
+                  />
+                </div>
                 <p className="mt-1 text-sm text-muted-foreground">
                   En{" "}
                   <span className="font-medium text-foreground capitalize">
@@ -391,13 +470,22 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
           <CardContent>
             {bestBid ? (
               <>
-                <span className="text-2xl font-bold tabular-nums">
-                  {bestBid.price.toLocaleString("es-VE", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}{" "}
-                  VES
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold tabular-nums">
+                    {bestBid.price.toLocaleString("es-VE", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    VES
+                  </span>
+                  <CopyButton
+                    value={`${bestBid.price.toLocaleString("es-VE", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })} VES`}
+                    label="Copiar precio de venta"
+                  />
+                </div>
                 <p className="mt-1 text-sm text-muted-foreground">
                   En{" "}
                   <span className="font-medium text-foreground capitalize">
@@ -428,13 +516,22 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
               <Skeleton className="h-8 w-32" />
             ) : bcvLatest ? (
               <>
-                <span className="text-2xl font-bold tabular-nums">
-                  {bcvLatest.usd_ves.toLocaleString("es-VE", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}{" "}
-                  VES
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold tabular-nums">
+                    {bcvLatest.usd_ves.toLocaleString("es-VE", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}{" "}
+                    VES
+                  </span>
+                  <CopyButton
+                    value={`${bcvLatest.usd_ves.toLocaleString("es-VE", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })} VES`}
+                    label="Copiar tasa BCV"
+                  />
+                </div>
                 <BcvBrechaBar
                   bcv={bcvLatest.usd_ves}
                   p2p={avgPrice}
@@ -450,14 +547,11 @@ function OverviewSection({ data, spark, avgPrice, summary, isLoading, error }: O
           </CardContent>
         </Card>
       </div>
+      </div>
 
-      <CurrencyConverter
-        avgPrice={avgPrice}
-        bcvRate={bcvLatest?.usd_ves ?? 0}
-        brecha={bcvLatest?.brecha ?? null}
-      />
-
-      <OverviewPriceChart />
+      <div className="animate-fade-in-up" style={{ animationDelay: "240ms" }}>
+        <OverviewPriceChart />
+      </div>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1">

@@ -195,7 +195,7 @@ input::placeholder {
 @keyframes fade-in-up {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -203,8 +203,25 @@ input::placeholder {
   }
 }
 
-.animate-fade-in-up {
-  animation: fade-in-up 0.35s ease-out both;
+@keyframes section-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-fade-in-up {
+    animation: fade-in-up 0.4s ease-out both;
+  }
+
+  .animate-section-enter {
+    animation: section-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
 }
 
 @keyframes pulse-soft {
@@ -214,6 +231,24 @@ input::placeholder {
 
 .animate-pulse-soft {
   animation: pulse-soft 2.4s ease-in-out infinite;
+}
+
+@keyframes brand-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-brand-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      #FF6811 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: brand-shimmer 1.6s ease-in-out infinite;
+  }
 }
 
 /* ===== Scrollbar personalizada de marca ===== */

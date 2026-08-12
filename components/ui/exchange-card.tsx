@@ -114,7 +114,7 @@ export function ExchangeCard({
             <p className="text-sm font-medium">Error: {error}</p>
             <button
               onClick={onRefresh}
-              className="mt-4 flex items-center gap-2 text-sm text-primary hover:underline"
+              className="mt-4 flex items-center gap-2 text-sm text-primary hover:underline transition-colors"
             >
               <RefreshCw className="h-3.5 w-3.5" />
               Reintentar
