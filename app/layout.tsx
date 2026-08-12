@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { PwaRegister } from "@/components/pwa-register"
 import { OfflineBanner } from "@/components/offline-banner"
+import { InstallPrompt } from "@/components/install-prompt"
 
 const lexendDeca = Lexend_Deca({ subsets: ["latin"] })
 
@@ -40,8 +41,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <OfflineBanner />
           {children}
-        <Toaster />
-        <PwaRegister />
+          <Toaster />
+          <PwaRegister />
+          <InstallPrompt />
         </ThemeProvider>
       </body>
     </html>
