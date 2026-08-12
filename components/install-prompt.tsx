@@ -134,7 +134,7 @@ export function InstallPrompt() {
       <div
         role="dialog"
         aria-label="Instalar aplicacion"
-        className="fixed top-4 left-1/2 -translate-x-1/2 z-[85] w-[calc(100%-2rem)] max-w-md animate-fade-in-down"
+        className="fixed top-[max(6rem,env(safe-area-inset-top))] left-1/2 -translate-x-1/2 z-[85] w-[calc(100%-2rem)] max-w-md animate-fade-in-down sm:top-4"
       >
         <div className="rounded-2xl border bg-background/95 backdrop-blur p-4 shadow-2xl shadow-black/40">
           <div className="flex items-start gap-3">
@@ -184,7 +184,7 @@ export function InstallPrompt() {
     <div
       role="dialog"
       aria-label="Instalar aplicacion"
-      className="fixed top-4 left-1/2 -translate-x-1/2 z-[85] w-[calc(100%-2rem)] max-w-md animate-fade-in-down"
+      className="fixed top-[max(6rem,env(safe-area-inset-top))] left-1/2 -translate-x-1/2 z-[85] w-[calc(100%-2rem)] max-w-md animate-fade-in-down sm:top-4"
     >
       <div className="rounded-2xl border bg-background/95 backdrop-blur p-4 shadow-2xl shadow-black/40">
         <div className="flex items-center gap-3">
